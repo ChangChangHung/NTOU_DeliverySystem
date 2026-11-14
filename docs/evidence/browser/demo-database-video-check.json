@@ -1,0 +1,20 @@
+{
+  "verified_at": "2026-11-15T03:52:21+08:00",
+  "original_demo_database": "ntou_acceptance_demo_20261114_b8877ae024",
+  "read_only_transaction": true,
+  "rows_match_original_demo_database_evidence": true,
+  "buyer_1_courier": 2,
+  "buyer_4_courier": 3,
+  "all_three_meal_rows_state": "PROCESSING",
+  "product_and_functional_test_files_unchanged": true,
+  "video_duration_seconds": 52.44,
+  "original_segment_seconds": 36.44,
+  "supplement_segment_seconds": 16,
+  "not_continuous_recording": true,
+  "video_sha256": "9943810afd8538606935b3d2caad6552e11fb11cd496d9943dced805e84256e1",
+  "query_json_sha256": "96e3bb639f84e7dcc8fa734522f66eae8c7be980d58e6f859a1adcba70404241",
+  "query_sql_sha256": "2755f36edd4c99ddfc9ce50453d4dec10f798a1bcc74b5cfb062a8fbf16fb109",
+  "query_screenshot_sha256": "fac54e1e1e7bfcd53d4d92f4698ce65714a097c7c3cb926815d19881eee73231",
+  "raw_supplement_sha256": "173c29382a1ab6936932d1c6ede1eeef8e6aaf780b99058df0f589599cc3f44d",
+  "original_recording_sha256": "a19ee7fb81939c2b330d77e40ac5664d66dad9694aae54175c71a932d00cdee5"
+}

@@ -1,6 +1,10 @@
 
 # Python
 backend/.venv/
+.local-runtime/
+artifacts/
+.playwright-cli/
+output/
 __pycache__/
 *.py[cod]
 

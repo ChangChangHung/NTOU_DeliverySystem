@@ -1,0 +1,10 @@
+test_defaults_to_local_3307_and_unique_new_schema_without_exposing_password (__main__.LocalDatabaseSafetyTests.test_defaults_to_local_3307_and_unique_new_schema_without_exposing_password) ... ok
+test_rejects_remote_or_wildcard_database_hosts (__main__.LocalDatabaseSafetyTests.test_rejects_remote_or_wildcard_database_hosts) ... ok
+test_rejects_shared_schema_names_and_sql_identifier_injection (__main__.LocalDatabaseSafetyTests.test_rejects_shared_schema_names_and_sql_identifier_injection) ... ok
+test_requires_explicit_credentials_and_valid_port (__main__.LocalDatabaseSafetyTests.test_requires_explicit_credentials_and_valid_port) ... ok
+test_requires_explicit_schema_creation_opt_in (__main__.LocalDatabaseSafetyTests.test_requires_explicit_schema_creation_opt_in) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+OK

@@ -1,0 +1,49 @@
+{
+  "queried_at": "2026-11-15T03:52:21+08:00",
+  "read_only_transaction": true,
+  "source": {
+    "host": "127.0.0.1",
+    "port": 3307,
+    "database": "ntou_acceptance_demo_20261114_b8877ae024",
+    "mysql_version": "8.0.46",
+    "datadir": "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/.local-runtime/mysql-data"
+  },
+  "source_seed": "artifacts/demo-seed.json",
+  "source_seed_sha256": "2babdb405b06e23dc6497192afee72586b288a4af97f747b89e919dae2fa67ae",
+  "note": "2026-11-15 supplementary recording: fresh SELECT of the original 2026-11-14 Demo database; synthetic data only.",
+  "sql": "SELECT o.buyer_id, o.timestamp, o.order_id,\n       o.meal_id, o.order_state, d.deliverer_id\nFROM orders AS o\nJOIN delivery AS d\n  ON o.buyer_id = d.buyer_id AND o.timestamp = d.timestamp\nWHERE (o.buyer_id = 1 AND o.timestamp = '2030-01-18 20:40:51')\n   OR (o.buyer_id = 4 AND o.timestamp = '2030-02-06 23:42:18')\nORDER BY o.buyer_id, o.order_id;",
+  "columns": [
+    "buyer_id",
+    "timestamp",
+    "order_id",
+    "meal_id",
+    "order_state",
+    "deliverer_id"
+  ],
+  "rows": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2030-01-18 20:40:51",
+      "order_id": 1,
+      "meal_id": 1,
+      "order_state": "PROCESSING",
+      "deliverer_id": 2
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2030-01-18 20:40:51",
+      "order_id": 2,
+      "meal_id": 2,
+      "order_state": "PROCESSING",
+      "deliverer_id": 2
+    },
+    {
+      "buyer_id": 4,
+      "timestamp": "2030-02-06 23:42:18",
+      "order_id": 3,
+      "meal_id": 3,
+      "order_state": "PROCESSING",
+      "deliverer_id": 3
+    }
+  ]
+}

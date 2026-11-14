@@ -1,0 +1,583 @@
+{
+  "schema": "ntou.acceptance.browser-qa.v1",
+  "run_id": "qa-1794665085848",
+  "completed_at": "2026-11-14T14:05:05.520Z",
+  "frontend": "http://127.0.0.1:5173/driver.html",
+  "backend": "http://127.0.0.1:5000",
+  "browser": "157.0.8103.51",
+  "passed": false,
+  "total": 16,
+  "passed_cases": 15,
+  "cases": [
+    {
+      "name": "initial-empty",
+      "mode": "real local API",
+      "passed": true,
+      "duration_ms": 238,
+      "empty": true,
+      "demo_account": "示範帳號：外送員 #2（尚未串接登入）"
+    },
+    {
+      "name": "real-order-two-meals",
+      "mode": "real local API; creates synthetic order",
+      "passed": false,
+      "duration_ms": 65,
+      "error": "Expected food subtotal 280"
+    },
+    {
+      "name": "known-400",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 318,
+      "accept_post_count": 1,
+      "notice": "QA 注入 400：請求資料錯誤",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "known-404",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 318,
+      "accept_post_count": 1,
+      "notice": "QA 注入 404：找不到外送員",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-500",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 327,
+      "accept_post_count": 1,
+      "notice": "尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-non-json",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 337,
+      "accept_post_count": 1,
+      "notice": "尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-missing-identity",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 330,
+      "accept_post_count": 1,
+      "notice": "尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-network-abort",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 336,
+      "accept_post_count": 1,
+      "notice": "尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "unknown-timeout-15s",
+      "mode": "browser fault injection; no real acceptance POST",
+      "passed": true,
+      "duration_ms": 15683,
+      "accept_post_count": 1,
+      "notice": "尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。",
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": null,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty-order-meals",
+      "mode": "browser payload fault injection; database unchanged",
+      "passed": true,
+      "duration_ms": 102,
+      "filtered": true,
+      "recovered": true
+    },
+    {
+      "name": "empty-delivery",
+      "mode": "browser payload fault injection; database unchanged",
+      "passed": true,
+      "duration_ms": 91,
+      "filtered": true,
+      "recovered": true
+    },
+    {
+      "name": "mixed-order-states",
+      "mode": "browser payload fault injection; database unchanged",
+      "passed": true,
+      "duration_ms": 102,
+      "filtered": true,
+      "recovered": true
+    },
+    {
+      "name": "mobile-390x844",
+      "mode": "real local API; viewport inspection",
+      "passed": true,
+      "duration_ms": 24,
+      "viewport": 390,
+      "document": 390,
+      "body": 390
+    },
+    {
+      "name": "rapid-click-single-post",
+      "mode": "real local API; browser route adds a deliberate 300 ms delay only",
+      "passed": true,
+      "duration_ms": 1142,
+      "dom_clicks": 8,
+      "accept_post_count": 1,
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 ui-validation synthetic only",
+            "order_id": 12,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:04:46"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 13,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:04:46"
+          }
+        ]
+      }
+    },
+    {
+      "name": "success-then-refresh-failure",
+      "mode": "real acceptance API; only subsequent list GET is fault-injected",
+      "passed": true,
+      "duration_ms": 128,
+      "accept_post_count": 1,
+      "backend_state": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "qa-1794665085848 refresh-after-success synthetic only",
+            "order_id": 14,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-14 22:05:05"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "QA 合成測試，不是真實外送訂單",
+            "order_id": 15,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-14 22:05:05"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+            "timestamp": "2026-11-14 22:05:05"
+          }
+        ]
+      }
+    },
+    {
+      "name": "refresh-recovery",
+      "mode": "real local API; all fault routes removed",
+      "passed": true,
+      "duration_ms": 88,
+      "final_states": [
+        {
+          "order": {
+            "buyer_id": "1",
+            "timestamp": "2026-11-14 22:04:46",
+            "label": "ui-validation"
+          },
+          "meals": [
+            {
+              "buyer_id": 1,
+              "meal_id": 1,
+              "note": "qa-1794665085848 ui-validation synthetic only",
+              "order_id": 12,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2026-11-14 22:04:46"
+            },
+            {
+              "buyer_id": 1,
+              "meal_id": 2,
+              "note": "QA 合成測試，不是真實外送訂單",
+              "order_id": 13,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2026-11-14 22:04:46"
+            }
+          ],
+          "delivery": [
+            {
+              "buyer_id": 1,
+              "deliverer_id": 2,
+              "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+              "timestamp": "2026-11-14 22:04:46"
+            }
+          ]
+        },
+        {
+          "order": {
+            "buyer_id": "1",
+            "timestamp": "2026-11-14 22:05:05",
+            "label": "refresh-after-success"
+          },
+          "meals": [
+            {
+              "buyer_id": 1,
+              "meal_id": 1,
+              "note": "qa-1794665085848 refresh-after-success synthetic only",
+              "order_id": 14,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2026-11-14 22:05:05"
+            },
+            {
+              "buyer_id": 1,
+              "meal_id": 2,
+              "note": "QA 合成測試，不是真實外送訂單",
+              "order_id": 15,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2026-11-14 22:05:05"
+            }
+          ],
+          "delivery": [
+            {
+              "buyer_id": 1,
+              "deliverer_id": 2,
+              "pickup_address": "QA 合成測試資料｜海大測試地點，不需配送",
+              "timestamp": "2026-11-14 22:05:05"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "page_errors": [],
+  "accept_requests": [
+    {
+      "scenario": "known-400",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:46.213Z"
+    },
+    {
+      "scenario": "known-404",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:46.528Z"
+    },
+    {
+      "scenario": "unknown-500",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:46.846Z"
+    },
+    {
+      "scenario": "unknown-non-json",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:47.173Z"
+    },
+    {
+      "scenario": "unknown-missing-identity",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:47.514Z"
+    },
+    {
+      "scenario": "unknown-network-abort",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:47.840Z"
+    },
+    {
+      "scenario": "unknown-timeout-15s",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:04:48.181Z"
+    },
+    {
+      "scenario": "rapid-click-single-post",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:04:46",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:05:04.165Z"
+    },
+    {
+      "scenario": "success-then-refresh-failure",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-14 22:05:05",
+        "deliverer_id": 2
+      },
+      "at": "2026-11-14T14:05:05.371Z"
+    }
+  ],
+  "synthetic_orders": [
+    {
+      "buyer_id": "1",
+      "timestamp": "2026-11-14 22:04:46",
+      "label": "ui-validation"
+    },
+    {
+      "buyer_id": "1",
+      "timestamp": "2026-11-14 22:05:05",
+      "label": "refresh-after-success"
+    }
+  ],
+  "limits": [
+    "This is a local synthetic-data browser verification, not a shared/production environment test.",
+    "HTTP failures, malformed payloads, network abort and timeout are deliberate browser route injections.",
+    "The rapid-click test uses one page and one courier; it is not the two-transaction MySQL race test.",
+    "No login, authorization, delivery fee, cancellation policy or entire buyer-to-completion workflow is claimed."
+  ],
+  "followup": "Expected subtotal test fixture used 2x meal1(80)+1x meal2(100)=260. Product correctly showed 260. Runner corrected to 1x80+2x100=280 and rerun separately."
+}
