@@ -2,22 +2,28 @@
 
 盧益甫｜Iteration 2｜`feature/yves20716-order-acceptance`
 
-我接著組員的 `feature/driver-lobby-vue`（`bb80ed4`）往下做，原本的大廳、接單 API、時間戳處理和接單鎖都沿用組員的版本。我這次加了可以直接開啟的接單頁，處理按鈕連點、接單失敗時的提示，以及接單後的清單更新，也把測試結果和報告要用的資料整理在這裡。
+我接著組員的 `feature/driver-lobby-vue`（`bb80ed4`）往下做，以原本的大廳和接單 API 為基礎，補上可以直接開啟的接單頁、按鈕防連點、錯誤提示和清單更新。現在也能在「我的已接訂單」看到自己接下的餐點。11/15 再檢查資料庫流程時，另外修了同秒下單混單、狀態互相覆蓋和刪單留下外送紀錄等問題，測試與報告資料都整理在這裡。
 
 ## Demo 與設計資料
 
-- [接單 Demo：52.44 秒，含資料庫查詢](docs/evidence/demo-captioned.mp4)
-- [接單設計與測試 PDF](docs/接單設計與驗收素材.pdf)
+- [新版接單 Demo：88 秒，含雙頁操作、已接清單與資料庫查詢](docs/evidence/demo-accepted-orders-20261115/接單流程與例外情況.mp4)
+- [接單設計與測試補充 PDF](docs/接單設計與測試-更新版.pdf)
 - [API、資料模型、接單流程與狀態圖](docs/acceptance-handoff.md)
 - [測試結果與紀錄](docs/acceptance-checklist.md)
 - [影片時間軸與報告講稿](docs/acceptance-demo.md)
 - [本機啟動與重跑測試](docs/acceptance-runbook.md)
+- [11/15 補測結果與還需要串接的地方](docs/acceptance-integration.md)
+- [11/15 資料庫與操作 bug：修正內容、測試和待確認事項](docs/acceptance-bug-review.md)
 
-影片前 36秒是 11/14 錄的接單操作。為了看清楚訂單最後是誰接走的，我在 11/15 補錄了最後 16 秒的 MySQL 查詢，這段只查資料，沒有改訂單。
+新版影片把 #2、#3 的接單頁放在一起：#2 先接買家 #1 的單，#3 接同一張時出現紅字，再改接買家 #4 的單。兩邊重新整理後，都能在「我的已接訂單」看到各自的餐點。接著切到資料庫重新查詢，確認兩張單分別由 #2、#3 接走；最後也測了連線中斷和恢復。
 
-查詢結果可以看到，買家 #1 的兩筆餐點都是外送員 #2 接的，買家 #4 的一筆餐點則是 #3 接的，三筆狀態都變成 `PROCESSING`。要對照資料的話，可以看[查詢 SQL](docs/evidence/demo-database-query.sql)、[查詢結果](docs/evidence/browser/demo-database-query.json)和[截圖](docs/evidence/browser/demo-database-query.png)。
+這次訂單的時間由下單 API 產生，影片裡是 `2026-11-15 22:01:25`。完整操作、查詢結果和舊版紀錄都放在[影片說明](docs/acceptance-demo.md)。
 
 ## 測試結果
+
+11/15 晚上修完這批 bug 後，後端三組共 50/50 通過，雙頁聯測 8/8、另外查回的四張訂單也都正確。前端回應與版面檢查 13/13、typecheck 和 build 同樣通過。哪些是實際 API 操作、哪些是刻意模擬錯誤，以及還沒接上的地方，放在[本輪檢查紀錄](docs/acceptance-bug-review.md)。88 秒影片是這輪修正前錄的，新的 bug 測試另留紀錄與截圖。
+
+新增已接清單時的前一輪結果仍保留在[聯測紀錄](docs/acceptance-integration.md)，當時為雙頁 8/8、四張資料庫查詢一致；更早的 11/15 後端測試為 12/12。
 
 2026-11-14 跑的測試都通過了：後端 10/10、前端 16/16、本機資料庫設定檢查 5/5，typecheck 和 build 也通過。
 

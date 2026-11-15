@@ -1,0 +1,1191 @@
+{
+  "schema": "ntou.acceptance.integration.v1",
+  "run_id": "integration-1794752685896",
+  "completed_at": "2026-11-15T14:24:53.819Z",
+  "passed": true,
+  "total": 8,
+  "passed_cases": 8,
+  "cases": [
+    {
+      "name": "two-courier-pages",
+      "mode": "real local API; separate browser contexts",
+      "passed": true,
+      "duration_ms": 57,
+      "courier_ids": [
+        2,
+        3
+      ],
+      "initial_card_counts": [
+        2,
+        2
+      ],
+      "other_courier_order_filtered": {
+        "buyer_id": 10,
+        "timestamp": "2026-11-15 22:24:44"
+      }
+    },
+    {
+      "name": "delivery-created-after-order",
+      "mode": "real order and Delivery APIs",
+      "passed": true,
+      "duration_ms": 1059,
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47"
+      }
+    },
+    {
+      "name": "stale-second-courier-409",
+      "mode": "two pages; real 200 then real 409",
+      "passed": true,
+      "duration_ms": 1139,
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 1,
+                "order_id": 16,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 2,
+                "order_id": 17,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2026-11-15 22:24:47"
+          }
+        },
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 16,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 17,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "buyer_id": 1,
+            "deliverer_id": 3,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 1,
+                "order_id": 18,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 2,
+                "order_id": 19,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2026-11-15 22:24:48"
+          }
+        }
+      ],
+      "first_own_order": {
+        "owner_card_count": 1,
+        "other_courier_card_count": 0,
+        "meal_rows": [
+          "測試餐點 1 × 1（測試餐廳 70ce35bc）",
+          "測試餐點 2 × 2（測試餐廳 70ce35bc）"
+        ]
+      },
+      "second_own_order": {
+        "owner_card_count": 1,
+        "other_courier_card_count": 0,
+        "meal_rows": [
+          "測試餐點 1 × 1（測試餐廳 70ce35bc）",
+          "測試餐點 2 × 2（測試餐廳 70ce35bc）"
+        ]
+      },
+      "persisted": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+            "order_id": 16,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:47"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+            "order_id": 17,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:47"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "pickup_address": "聯測交付點（合成資料，不需配送）",
+            "timestamp": "2026-11-15 22:24:47"
+          }
+        ]
+      },
+      "second_order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48"
+      },
+      "second_persisted": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+            "order_id": 18,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:48"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+            "order_id": 19,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:48"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 3,
+            "pickup_address": "聯測交付點（合成資料，不需配送）",
+            "timestamp": "2026-11-15 22:24:48"
+          }
+        ]
+      },
+      "both_own_lists_survive_refresh": true
+    },
+    {
+      "name": "two-pages-compete",
+      "mode": "real acceptance requests; barrier delays sending until both clicks arrive",
+      "passed": true,
+      "duration_ms": 1031,
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:49"
+      },
+      "requests": [
+        {
+          "scenario": "two-pages-compete",
+          "page": 1,
+          "body": {
+            "buyer_id": "1",
+            "timestamp": "2026-11-15 22:24:49",
+            "deliverer_id": 3
+          }
+        },
+        {
+          "scenario": "two-pages-compete",
+          "page": 0,
+          "body": {
+            "buyer_id": "1",
+            "timestamp": "2026-11-15 22:24:49",
+            "deliverer_id": 2
+          }
+        }
+      ],
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 20,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 21,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        },
+        {
+          "status": 200,
+          "body": {
+            "buyer_id": 1,
+            "deliverer_id": 3,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 1,
+                "order_id": 20,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 2,
+                "order_id": 21,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2026-11-15 22:24:49"
+          }
+        }
+      ],
+      "own_order": {
+        "owner_card_count": 1,
+        "other_courier_card_count": 0,
+        "meal_rows": [
+          "測試餐點 1 × 1（測試餐廳 70ce35bc）",
+          "測試餐點 2 × 2（測試餐廳 70ce35bc）"
+        ]
+      },
+      "persisted": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+            "order_id": 20,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:49"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+            "order_id": 21,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:49"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 3,
+            "pickup_address": "聯測交付點（合成資料，不需配送）",
+            "timestamp": "2026-11-15 22:24:49"
+          }
+        ]
+      }
+    },
+    {
+      "name": "response-lost-after-commit",
+      "mode": "real acceptance commits; only its browser response is aborted",
+      "passed": true,
+      "duration_ms": 1630,
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:50"
+      },
+      "upstream_response": {
+        "status": 200,
+        "body": {
+          "buyer_id": 1,
+          "deliverer_id": 2,
+          "message": "訂單承接成功",
+          "processed_orders": [
+            {
+              "meal_id": 1,
+              "order_id": 22,
+              "order_state": "processing",
+              "quantity": 1
+            },
+            {
+              "meal_id": 2,
+              "order_id": 23,
+              "order_state": "processing",
+              "quantity": 2
+            }
+          ],
+          "success": true,
+          "timestamp": "2026-11-15 22:24:50"
+        }
+      },
+      "accept_post_count": 1,
+      "recovered_own_order": {
+        "owner_card_count": 1,
+        "other_courier_card_count": 0,
+        "meal_rows": [
+          "測試餐點 1 × 1（測試餐廳 70ce35bc）",
+          "測試餐點 2 × 2（測試餐廳 70ce35bc）"
+        ]
+      },
+      "persisted": {
+        "meals": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 lost-response｜合成測試資料",
+            "order_id": 22,
+            "order_state": "processing",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:50"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 lost-response｜合成測試資料",
+            "order_id": 23,
+            "order_state": "processing",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:50"
+          }
+        ],
+        "delivery": [
+          {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "pickup_address": "聯測交付點（合成資料，不需配送）",
+            "timestamp": "2026-11-15 22:24:50"
+          }
+        ]
+      }
+    },
+    {
+      "name": "own-orders-load-error-recovery",
+      "mode": "browser-injected JSON 500; real API resumes after removing the route",
+      "passed": true,
+      "duration_ms": 255,
+      "simulated_failure": {
+        "endpoint": "/api/view_order_by_stamp",
+        "status": 500,
+        "count": 1
+      },
+      "own_order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47"
+      },
+      "other_courier_order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48"
+      },
+      "recovered_own_order": {
+        "owner_card_count": 1,
+        "other_courier_card_count": 0,
+        "meal_rows": [
+          "測試餐點 1 × 1（測試餐廳 70ce35bc）",
+          "測試餐點 2 × 2（測試餐廳 70ce35bc）"
+        ]
+      },
+      "accept_post_count": 0
+    },
+    {
+      "name": "invalid-courier-setting",
+      "mode": "invalid VITE_DELIVERER_ID; real pending cards",
+      "passed": true,
+      "duration_ms": 224,
+      "accept_post_count": 0
+    },
+    {
+      "name": "in-cart-hidden",
+      "mode": "real IN_CART fixture rows",
+      "passed": true,
+      "duration_ms": 103,
+      "hidden_orders": [
+        {
+          "buyer_id": 19,
+          "timestamp": "2026-11-15 22:24:44"
+        },
+        {
+          "buyer_id": 22,
+          "timestamp": "2026-11-15 22:24:44"
+        }
+      ]
+    }
+  ],
+  "page_errors": [],
+  "orders": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:24:47",
+      "label": "delayed-delivery",
+      "order_ids": [
+        16,
+        17
+      ],
+      "expected_deliverer_id": 2,
+      "expected_states": [
+        "PROCESSING",
+        "PROCESSING"
+      ],
+      "expected_items": [
+        {
+          "meal_id": 1,
+          "meal_name": "測試餐點 1",
+          "quantity": 1
+        },
+        {
+          "meal_id": 2,
+          "meal_name": "測試餐點 2",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:24:48",
+      "label": "courier-b-own-order",
+      "order_ids": [
+        18,
+        19
+      ],
+      "expected_deliverer_id": 3,
+      "expected_states": [
+        "PROCESSING",
+        "PROCESSING"
+      ],
+      "expected_items": [
+        {
+          "meal_id": 1,
+          "meal_name": "測試餐點 1",
+          "quantity": 1
+        },
+        {
+          "meal_id": 2,
+          "meal_name": "測試餐點 2",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:24:49",
+      "label": "two-pages-compete",
+      "order_ids": [
+        20,
+        21
+      ],
+      "expected_deliverer_id": 3,
+      "expected_states": [
+        "PROCESSING",
+        "PROCESSING"
+      ],
+      "expected_items": [
+        {
+          "meal_id": 1,
+          "meal_name": "測試餐點 1",
+          "quantity": 1
+        },
+        {
+          "meal_id": 2,
+          "meal_name": "測試餐點 2",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:24:50",
+      "label": "lost-response",
+      "order_ids": [
+        22,
+        23
+      ],
+      "expected_deliverer_id": 2,
+      "expected_states": [
+        "PROCESSING",
+        "PROCESSING"
+      ],
+      "expected_items": [
+        {
+          "meal_id": 1,
+          "meal_name": "測試餐點 1",
+          "quantity": 1
+        },
+        {
+          "meal_id": 2,
+          "meal_name": "測試餐點 2",
+          "quantity": 2
+        }
+      ]
+    }
+  ],
+  "accept_requests": [
+    {
+      "scenario": "stale-second-courier-409",
+      "page": 0,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:47",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "page": 1,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:47",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "page": 1,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:48",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "scenario": "two-pages-compete",
+      "page": 1,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:49",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "scenario": "two-pages-compete",
+      "page": 0,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:49",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "scenario": "response-lost-after-commit",
+      "page": 0,
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:24:50",
+        "deliverer_id": 2
+      }
+    }
+  ],
+  "api_calls": [
+    {
+      "scenario": "two-courier-pages",
+      "endpoint": "/api/view_all_meals",
+      "status": 200,
+      "body": [
+        {
+          "meal_id": 1,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 1
+        },
+        {
+          "meal_id": 2,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 1
+        },
+        {
+          "meal_id": 3,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 2
+        },
+        {
+          "meal_id": 4,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 3
+        },
+        {
+          "meal_id": 5,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 3
+        },
+        {
+          "meal_id": 6,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 4
+        },
+        {
+          "meal_id": 7,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 4
+        },
+        {
+          "meal_id": 8,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 5
+        },
+        {
+          "meal_id": 9,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 5
+        },
+        {
+          "meal_id": 10,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 6
+        },
+        {
+          "meal_id": 11,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 6
+        },
+        {
+          "meal_id": 12,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 7
+        },
+        {
+          "meal_id": 13,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 7
+        },
+        {
+          "meal_id": 14,
+          "meal_name": "測試餐點 1",
+          "price": 80,
+          "restaurant_id": 8
+        },
+        {
+          "meal_id": 15,
+          "meal_name": "測試餐點 2",
+          "price": 100,
+          "restaurant_id": 8
+        }
+      ]
+    },
+    {
+      "scenario": "two-courier-pages",
+      "endpoint": "/api/view_meals_of_order",
+      "request": {
+        "buyer_id": 10,
+        "timestamp": "2026-11-15 22:24:44"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 10,
+          "meal_id": 6,
+          "note": "接單展示用測試餐點",
+          "order_id": 6,
+          "order_state": "processing",
+          "quantity": 1,
+          "timestamp": "2026-11-15 22:24:44"
+        },
+        {
+          "buyer_id": 10,
+          "meal_id": 7,
+          "note": "接單展示用測試餐點",
+          "order_id": 7,
+          "order_state": "processing",
+          "quantity": 2,
+          "timestamp": "2026-11-15 22:24:44"
+        }
+      ]
+    },
+    {
+      "scenario": "two-courier-pages",
+      "endpoint": "/api/view_delivery",
+      "request": {
+        "buyer_id": 10,
+        "timestamp": "2026-11-15 22:24:44"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 10,
+          "deliverer_id": 12,
+          "pickup_address": "海大測試交付點",
+          "timestamp": "2026-11-15 22:24:44"
+        }
+      ]
+    },
+    {
+      "scenario": "delivery-created-after-order",
+      "endpoint": "/api/add_new_order",
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料"
+          },
+          {
+            "meal_id": 2,
+            "quantity": 2,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料"
+          }
+        ]
+      },
+      "status": 201,
+      "body": {
+        "message": "訂單建立成功",
+        "orders": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+            "order_id": 16,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:47"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+            "order_id": 17,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:47"
+          }
+        ],
+        "success": true,
+        "timestamp": "2026-11-15 22:24:47"
+      }
+    },
+    {
+      "scenario": "delivery-created-after-order",
+      "endpoint": "/api/add_new_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47",
+        "pickup_address": "聯測交付點（合成資料，不需配送）"
+      },
+      "status": 201,
+      "body": {
+        "delivery": {
+          "buyer_id": 1,
+          "deliverer_id": null,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:47"
+        },
+        "message": "外送需求建立成功",
+        "success": true
+      }
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/view_meals_of_order",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "meal_id": 1,
+          "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+          "order_id": 16,
+          "order_state": "processing",
+          "quantity": 1,
+          "timestamp": "2026-11-15 22:24:47"
+        },
+        {
+          "buyer_id": 1,
+          "meal_id": 2,
+          "note": "integration-1794752685896 delayed-delivery｜合成測試資料",
+          "order_id": 17,
+          "order_state": "processing",
+          "quantity": 2,
+          "timestamp": "2026-11-15 22:24:47"
+        }
+      ]
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/view_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "deliverer_id": 2,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:47"
+        }
+      ]
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/add_new_order",
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料"
+          },
+          {
+            "meal_id": 2,
+            "quantity": 2,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料"
+          }
+        ]
+      },
+      "status": 201,
+      "body": {
+        "message": "訂單建立成功",
+        "orders": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+            "order_id": 18,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:48"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+            "order_id": 19,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:48"
+          }
+        ],
+        "success": true,
+        "timestamp": "2026-11-15 22:24:48"
+      }
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/add_new_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48",
+        "pickup_address": "聯測交付點（合成資料，不需配送）"
+      },
+      "status": 201,
+      "body": {
+        "delivery": {
+          "buyer_id": 1,
+          "deliverer_id": null,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:48"
+        },
+        "message": "外送需求建立成功",
+        "success": true
+      }
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/view_meals_of_order",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "meal_id": 1,
+          "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+          "order_id": 18,
+          "order_state": "processing",
+          "quantity": 1,
+          "timestamp": "2026-11-15 22:24:48"
+        },
+        {
+          "buyer_id": 1,
+          "meal_id": 2,
+          "note": "integration-1794752685896 courier-b-own-order｜合成測試資料",
+          "order_id": 19,
+          "order_state": "processing",
+          "quantity": 2,
+          "timestamp": "2026-11-15 22:24:48"
+        }
+      ]
+    },
+    {
+      "scenario": "stale-second-courier-409",
+      "endpoint": "/api/view_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "deliverer_id": 3,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:48"
+        }
+      ]
+    },
+    {
+      "scenario": "two-pages-compete",
+      "endpoint": "/api/add_new_order",
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料"
+          },
+          {
+            "meal_id": 2,
+            "quantity": 2,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料"
+          }
+        ]
+      },
+      "status": 201,
+      "body": {
+        "message": "訂單建立成功",
+        "orders": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+            "order_id": 20,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:49"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+            "order_id": 21,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:49"
+          }
+        ],
+        "success": true,
+        "timestamp": "2026-11-15 22:24:49"
+      }
+    },
+    {
+      "scenario": "two-pages-compete",
+      "endpoint": "/api/add_new_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:49",
+        "pickup_address": "聯測交付點（合成資料，不需配送）"
+      },
+      "status": 201,
+      "body": {
+        "delivery": {
+          "buyer_id": 1,
+          "deliverer_id": null,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:49"
+        },
+        "message": "外送需求建立成功",
+        "success": true
+      }
+    },
+    {
+      "scenario": "two-pages-compete",
+      "endpoint": "/api/view_meals_of_order",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:49"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "meal_id": 1,
+          "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+          "order_id": 20,
+          "order_state": "processing",
+          "quantity": 1,
+          "timestamp": "2026-11-15 22:24:49"
+        },
+        {
+          "buyer_id": 1,
+          "meal_id": 2,
+          "note": "integration-1794752685896 two-pages-compete｜合成測試資料",
+          "order_id": 21,
+          "order_state": "processing",
+          "quantity": 2,
+          "timestamp": "2026-11-15 22:24:49"
+        }
+      ]
+    },
+    {
+      "scenario": "two-pages-compete",
+      "endpoint": "/api/view_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:49"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "deliverer_id": 3,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:49"
+        }
+      ]
+    },
+    {
+      "scenario": "response-lost-after-commit",
+      "endpoint": "/api/add_new_order",
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "integration-1794752685896 lost-response｜合成測試資料"
+          },
+          {
+            "meal_id": 2,
+            "quantity": 2,
+            "note": "integration-1794752685896 lost-response｜合成測試資料"
+          }
+        ]
+      },
+      "status": 201,
+      "body": {
+        "message": "訂單建立成功",
+        "orders": [
+          {
+            "buyer_id": 1,
+            "meal_id": 1,
+            "note": "integration-1794752685896 lost-response｜合成測試資料",
+            "order_id": 22,
+            "order_state": "pending",
+            "quantity": 1,
+            "timestamp": "2026-11-15 22:24:50"
+          },
+          {
+            "buyer_id": 1,
+            "meal_id": 2,
+            "note": "integration-1794752685896 lost-response｜合成測試資料",
+            "order_id": 23,
+            "order_state": "pending",
+            "quantity": 2,
+            "timestamp": "2026-11-15 22:24:50"
+          }
+        ],
+        "success": true,
+        "timestamp": "2026-11-15 22:24:50"
+      }
+    },
+    {
+      "scenario": "response-lost-after-commit",
+      "endpoint": "/api/add_new_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:50",
+        "pickup_address": "聯測交付點（合成資料，不需配送）"
+      },
+      "status": 201,
+      "body": {
+        "delivery": {
+          "buyer_id": 1,
+          "deliverer_id": null,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:50"
+        },
+        "message": "外送需求建立成功",
+        "success": true
+      }
+    },
+    {
+      "scenario": "response-lost-after-commit",
+      "endpoint": "/api/view_meals_of_order",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:50"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "meal_id": 1,
+          "note": "integration-1794752685896 lost-response｜合成測試資料",
+          "order_id": 22,
+          "order_state": "processing",
+          "quantity": 1,
+          "timestamp": "2026-11-15 22:24:50"
+        },
+        {
+          "buyer_id": 1,
+          "meal_id": 2,
+          "note": "integration-1794752685896 lost-response｜合成測試資料",
+          "order_id": 23,
+          "order_state": "processing",
+          "quantity": 2,
+          "timestamp": "2026-11-15 22:24:50"
+        }
+      ]
+    },
+    {
+      "scenario": "response-lost-after-commit",
+      "endpoint": "/api/view_delivery",
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:50"
+      },
+      "status": 200,
+      "body": [
+        {
+          "buyer_id": 1,
+          "deliverer_id": 2,
+          "pickup_address": "聯測交付點（合成資料，不需配送）",
+          "timestamp": "2026-11-15 22:24:50"
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Local synthetic data and explicit courier IDs; login/roles are not tested.",
+    "The two-page barrier coordinates HTTP requests; separate MySQL tests verify row-lock behavior.",
+    "The lost-response case deliberately aborts the response after the real API commits.",
+    "The own-orders load error is an injected browser response; the backend does not produce that 500."
+  ],
+  "audit": {
+    "passed": true,
+    "total": 13,
+    "passed_cases": 13
+  },
+  "browser": "157.0.8103.51"
+}

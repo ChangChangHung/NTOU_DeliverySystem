@@ -19,16 +19,23 @@ interface OrderStamp {
   timestamp: string
 }
 
-interface OrderMeal {
+type OrderState = 'in_cart' | 'pending' | 'processing' | 'completed' | 'cancelled'
+
+interface OrderMeal extends OrderStamp {
   meal_id: number
   quantity: number
   note: string | null
-  order_state: string
+  order_state: OrderState
 }
 
-interface Delivery {
+interface Delivery extends OrderStamp {
   pickup_address: string
   deliverer_id: number | null
+}
+
+interface OrderDetails {
+  meals: OrderMeal[]
+  delivery: Delivery
 }
 
 interface LobbyItem {
@@ -51,6 +58,7 @@ const validDeliverer = isPositiveInteger(DELIVERER_ID)
 const REQUEST_TIMEOUT_MS = 15000
 
 const orders = ref<LobbyOrder[]>([])
+const acceptedOrders = ref<LobbyOrder[]>([])
 const loading = ref(true)
 const error = ref('')
 const notice = ref('')
@@ -81,7 +89,7 @@ function isMeal(value: unknown): value is Meal {
     && isPositiveInteger(value.meal_id)
     && typeof value.meal_name === 'string'
     && isPositiveInteger(value.restaurant_id)
-    && typeof value.price === 'number' && Number.isFinite(value.price) && value.price >= 0
+    && typeof value.price === 'number' && Number.isSafeInteger(value.price) && value.price >= 0
 }
 
 function isRestaurant(value: unknown): value is Restaurant {
@@ -100,15 +108,16 @@ function isOrderStamp(value: unknown): value is OrderStamp {
 }
 
 function isOrderMeal(value: unknown): value is OrderMeal {
-  return isRecord(value)
+  return isRecord(value) && isOrderStamp(value)
     && isPositiveInteger(value.meal_id)
     && isPositiveInteger(value.quantity)
     && (value.note === null || typeof value.note === 'string')
     && typeof value.order_state === 'string'
+    && ['in_cart', 'pending', 'processing', 'completed', 'cancelled'].includes(value.order_state)
 }
 
 function isDelivery(value: unknown): value is Delivery {
-  return isRecord(value)
+  return isRecord(value) && isOrderStamp(value)
     && typeof value.pickup_address === 'string' && value.pickup_address.trim().length > 0
     && (value.deliverer_id === null || isPositiveInteger(value.deliverer_id))
 }
@@ -167,6 +176,47 @@ function orderKey(order: OrderStamp): string {
   return `${order.buyer_id}:${order.timestamp}`
 }
 
+function matchesOrder(value: OrderStamp, stamp: OrderStamp): boolean {
+  return String(value.buyer_id) === String(stamp.buyer_id) && value.timestamp === stamp.timestamp
+}
+
+async function readOrderDetails(stamp: OrderStamp, signal: AbortSignal): Promise<OrderDetails | null> {
+  try {
+    const meals = listOf(
+      await requestJson('/api/view_meals_of_order', postJson(stamp, signal)),
+      isOrderMeal, '訂單餐點資料',
+    )
+    if (!meals.every(item => matchesOrder(item, stamp))) {
+      throw new ResponseError('餐點資料與查詢的訂單不一致，請重新整理。')
+    }
+    if (meals.length === 0
+      || (!meals.every(item => item.order_state === 'pending')
+        && !meals.every(item => item.order_state === 'processing'))) return null
+
+    const deliveries = listOf(
+      await requestJson('/api/view_delivery', postJson(stamp, signal)),
+      isDelivery, '送餐資料',
+    )
+    if (!deliveries.every(item => matchesOrder(item, stamp))) {
+      throw new ResponseError('送餐資料與查詢的訂單不一致，請重新整理。')
+    }
+    const delivery = deliveries[0]
+    if (!delivery) return null
+    if (deliveries.length !== 1) throw new ResponseError('同一訂單有多筆送餐資料，請確認後端資料。')
+    return { meals, delivery }
+  } catch (e) {
+    // 缺少 Delivery 的訂單沿用既有規則；其他錯誤不能當成空清單。
+    if (e instanceof ApiError && e.status === 404 && e.hasJsonBody) return null
+    throw e
+  }
+}
+
+function hasConsistentAssignment(details: OrderDetails): boolean {
+  return details.meals.every(item => item.order_state === 'pending')
+    ? details.delivery.deliverer_id === null
+    : details.delivery.deliverer_id !== null
+}
+
 async function loadOrders() {
   const sequence = ++loadSequence
   loadController?.abort()
@@ -188,30 +238,25 @@ async function loadOrders() {
       isOrderStamp, '訂單資料',
     )
     const result: LobbyOrder[] = []
+    const acceptedResult: LobbyOrder[] = []
 
     for (const stamp of stamps) {
-      let orderMeals: OrderMeal[]
-      let deliveries: Delivery[]
-      try {
-        orderMeals = listOf(
-          await requestJson('/api/view_meals_of_order', postJson(stamp, controller.signal)),
-          isOrderMeal, '訂單餐點資料',
-        )
-        // 訂單可能已被刪除或承接；整單都必須仍在等待接單。
-        if (orderMeals.length === 0 || !orderMeals.every(item => item.order_state === 'pending')) continue
-        deliveries = listOf(
-          await requestJson('/api/view_delivery', postJson(stamp, controller.signal)),
-          isDelivery, '送餐資料',
-        )
-      } catch (e) {
-        // 缺少 Delivery 的訂單沿用既有規則：不列入待接單。
-        if (e instanceof ApiError && e.status === 404 && e.hasJsonBody) continue
-        throw e
+      let details = await readOrderDetails(stamp, controller.signal)
+      if (!details) continue
+      // 兩次查詢之間可能剛好有人接單或棄單，只重查一次確認。
+      if (!hasConsistentAssignment(details)) {
+        details = await readOrderDetails(stamp, controller.signal)
+        if (!details || !hasConsistentAssignment(details)) {
+          throw new ResponseError('訂單狀態與外送員資料尚未一致，請重新整理後再操作。')
+        }
       }
-
-      const delivery = deliveries[0]
-      if (!delivery || delivery.deliverer_id !== null) continue
-      if (deliveries.length !== 1) throw new ResponseError('同一訂單有多筆送餐資料，請確認後端資料。')
+      const { meals: orderMeals, delivery } = details
+      const isPending = orderMeals.every(item => item.order_state === 'pending')
+        && delivery.deliverer_id === null
+      const isAcceptedByMe = validDeliverer
+        && orderMeals.every(item => item.order_state === 'processing')
+        && delivery.deliverer_id === DELIVERER_ID
+      if (!isPending && !isAcceptedByMe) continue
 
       const items = orderMeals.map(orderMeal => {
         const meal = meals.find(item => item.meal_id === orderMeal.meal_id)
@@ -226,20 +271,31 @@ async function loadOrders() {
         }
       })
 
-      result.push({
+      const total = items.reduce((sum, item) => {
+        const subtotal = item.price * item.quantity
+        if (!Number.isSafeInteger(subtotal) || !Number.isSafeInteger(sum + subtotal)) {
+          throw new ResponseError('訂單金額超出可正確計算的範圍，請確認餐點價格與數量。')
+        }
+        return sum + subtotal
+      }, 0)
+      const target = isPending ? result : acceptedResult
+      target.push({
         ...stamp,
         address: delivery.pickup_address,
         items,
-        total: items.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        total,
       })
     }
 
-    if (sequence === loadSequence) orders.value = result
+    if (sequence === loadSequence) {
+      orders.value = result
+      acceptedOrders.value = acceptedResult
+    }
   } catch (e) {
     if (sequence !== loadSequence || controller.signal.aborted) return
     error.value = e instanceof ApiError || e instanceof ResponseError
       ? e.message
-      : '無法載入待接訂單，請確認後端是否啟動，再重新整理。'
+      : '無法載入訂單，請確認後端是否啟動，再重新整理。'
   } finally {
     if (sequence === loadSequence) loading.value = false
   }
@@ -353,6 +409,48 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+
+    <section
+      v-if="!loading && !error && validDeliverer"
+      class="accepted-section"
+      data-testid="accepted-orders"
+      aria-labelledby="accepted-orders-title"
+    >
+      <div class="section-heading">
+        <h2 id="accepted-orders-title">我的已接訂單</h2>
+        <span>共 {{ acceptedOrders.length }} 筆</span>
+      </div>
+
+      <div v-if="acceptedOrders.length === 0" class="message">目前沒有已接訂單</div>
+
+      <div
+        v-for="order in acceptedOrders"
+        :key="orderKey(order)"
+        class="accepted-order"
+        data-testid="accepted-order"
+        :data-order-key="orderKey(order)"
+      >
+        <div class="order-title">
+          <strong>買家 #{{ order.buyer_id }}</strong>
+          <span class="time">{{ order.timestamp }}</span>
+        </div>
+
+        <p>送餐地址：{{ order.address }}</p>
+
+        <div v-for="(item, index) in order.items" :key="index">
+          <div class="item">
+            <span>{{ item.name }} × {{ item.quantity }}（{{ item.restaurant }}）</span>
+            <span>NT$ {{ item.price * item.quantity }}</span>
+          </div>
+          <p v-if="item.note" class="note">備註：{{ item.note }}</p>
+        </div>
+
+        <div class="bottom">
+          <span class="total">餐點小計：NT$ {{ order.total }}</span>
+          <span class="accepted-status">已接單</span>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -397,12 +495,38 @@ h1 {
   padding: 30px;
 }
 
-.order {
+.order, .accepted-order {
   background: white;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 10px;
   margin-bottom: 15px;
+  overflow-wrap: anywhere;
+}
+
+.accepted-section {
+  border-top: 1px solid #ddd;
+  margin-top: 30px;
+  padding-top: 20px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.accepted-status {
+  color: #215c36;
+  font-weight: bold;
 }
 
 .order-title {
@@ -422,7 +546,17 @@ h1 {
 .item {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   padding: 5px 0;
+}
+
+.item > span:first-child {
+  min-width: 0;
+}
+
+.item > span:last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .note {

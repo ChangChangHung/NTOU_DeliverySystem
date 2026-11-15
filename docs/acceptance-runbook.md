@@ -1,6 +1,10 @@
 # 接單模組執行說明
 
-我把重跑測試和 Demo 的步驟整理在下面，所有命令都從專案根目錄執行。API 與負責範圍見 [交接素材](acceptance-handoff.md)，這次 10/10 的測試結果見 [驗收對照表](acceptance-checklist.md)。
+我把重跑測試和 Demo 的步驟整理在下面，所有命令都從專案根目錄執行。API 與負責範圍見 [交接素材](acceptance-handoff.md)，各次測試結果見 [驗收對照表](acceptance-checklist.md)。
+
+11/15 新增的資料庫與操作檢查，可用 `local_acceptance.py test-lifecycle`、`local_acceptance.py test-catalog` 和 `local_integration.py --audit` 重跑。完整命令、需要的參數與本輪結果見 [bug 檢查紀錄](acceptance-bug-review.md#重跑方式)。
+
+目前[聯測命令](acceptance-integration.md#重跑這次聯測)會建立新資料、啟動兩個外送員頁面，驗證待接與「我的已接訂單」。11/15 最新一輪 8 案及 4 張獨立 MySQL 核對都通過；先前後端 12 項的結果另保留。下方也列出雙頁錄影入口、手動 Demo 與原本 16 項瀏覽器 QA 的步驟。
 
 ## 在我的 Mac 上重跑
 
@@ -24,7 +28,9 @@ backend/.venv/bin/python -B backend/scripts/local_acceptance.py serve
 VITE_DELIVERER_ID="$(backend/.venv/bin/python -c 'import json; print(json.load(open("artifacts/freshseed.json"))["frontend_environment"]["VITE_DELIVERER_ID"])')" npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173 --strictPort
 ```
 
-開啟 [接單大廳](http://127.0.0.1:5173/driver.html)後，新 seed 應顯示兩張可接訂單。缺 Delivery、已承接、取消與完成的案例則應隱藏。實際買家 ID、外送員 ID 和時間戳都在 seed JSON，請依這份資料設定，不要寫死帳號數字。
+開啟 [接單大廳](http://127.0.0.1:5173/driver.html)後，新 seed 應顯示兩張可接訂單。缺 Delivery、已承接、取消與完成的案例不列入待接清單；已承接且全部餐點為 `processing` 的單，只在歸屬該外送員的「我的已接訂單」顯示。實際買家 ID、外送員 ID 和時間戳都在 seed JSON，請依這份資料設定，不要寫死帳號數字。
+
+11/15 晚上已修正 Demo 的建單方式：現在由下單 API 產生當下時間，不再沿用單元測試的 2030 年日期。seed JSON 的 `creation_evidence` 保留各張訂單的 API 回應與時間核對結果。
 
 重錄時，先以 `Ctrl+C` 停止 Flask，再重新 `seed`、`serve`，並用新 seed 的 ID 重開前端。舊 schema 會保留，方便回頭看測試資料，不會刪除或重置。結束時先停止前後端，再執行：
 
@@ -33,6 +39,31 @@ backend/.venv/bin/python -B backend/scripts/local_acceptance.py mysql-stop
 ```
 
 `mysql-stop` 只會停止核對通過的專用 MySQL。無法確認是哪個服務時會拒絕執行，請先確認原因，不要強制終止其他程序。
+
+## 兩位外送員與資料庫的錄影入口
+
+已準備好上面的本機 MySQL、Python 與前端套件後，從專案根目錄執行：
+
+```sh
+backend/.venv/bin/python -B backend/scripts/local_acceptance.py mysql-start
+backend/.venv/bin/python -B backend/scripts/local_demo.py \
+  --node /Users/luyifu/.nvm/versions/node/v22.22.2/bin/node
+```
+
+`--node` 指向已安裝的 Node；別台電腦請換成自己的路徑。這支工具讀取本機私有設定，每次建立新 Demo schema，不需要先跑 `seed`。看到 `ready: true` 後，開啟 [雙頁錄影入口](http://127.0.0.1:8767/)。
+
+畫面中的兩個 iframe 分別載入 `5180/driver.html`、`5181/driver.html` 的真實外送員頁面，共用 `5100` 的 Flask API。上方「查詢資料庫」使用獨立 MySQL 唯讀交易，查這次兩張示範訂單。這是輔助錄影頁，不是新增產品首頁。
+
+建議依序展示：
+
+1. 兩個頁面先保留同一張待接單。讓 #2 接單，捲到「我的已接訂單」查看餐點與數量。
+2. #3 在舊清單點同一張單，確認出現 `409` 的原因提示；該單不會出現在 #3 的已接清單。
+3. #3 接另一張單，再查看兩邊各自接到的內容。重新整理，確認歸屬與餐點仍正確。
+4. 按「查詢資料庫」，把買家、時間、每筆餐點狀態及外送員 ID 和兩邊畫面對照。
+
+這段操作展示先後接單的 `409`；兩頁請求競爭另由聯測 runner 驗證。`local_demo.py` 本身不會錄製或輸出影片，錄影成品與字幕見 [Demo 素材](acceptance-demo.md)。
+
+seed、示範訂單、各服務日誌及每次查詢的 JSON 會留在新的 `artifacts/live-demo-*`。`5100`、`5180`、`5181`、`8767` 必須空著，若聯測或另一個 Demo 正在使用，先正常結束那次程序。按 `Ctrl+C` 會結束這個錄影入口與它開啟的前後端，MySQL 和 schema 會保留。
 
 ## 同學要在自己的電腦跑
 
@@ -95,11 +126,13 @@ npm --prefix frontend run build
 
 這個命令會跑 typecheck 和 Vite build。開發模式透過 Vite proxy 將 `/api` 轉給 `127.0.0.1:5000`；build 只產生靜態檔，公開部署和 API 路由還要由團隊設定。
 
-我這次的 [build](evidence/frontend-build.log)已通過，也保留了 [5/5 本機設定測試](evidence/mysql-safety.log)和[19 個 Python 套件相容性檢查](evidence/python-dependencies.log)的紀錄。
+11/14 的 [build 日誌](evidence/frontend-build.log)、[5/5 本機設定測試](evidence/mysql-safety.log)和[19 個 Python 套件相容性檢查](evidence/python-dependencies.log)保留為原始紀錄。11/15 新增已接清單後也已重跑 typecheck 與 build；本輪瀏覽器和資料庫結果見[聯測報告](evidence/accepted-orders-20261115/integration-results.json)。
 
 ## 重跑瀏覽器補強 QA
 
 [acceptance-browser.js](../frontend/tests/acceptance-browser.js) 是瀏覽器自動測試，執行前要先開啟本機前後端。我使用的工具是 `@playwright/cli 0.1.24`、Playwright／core `1.66.0-alpha-1794252756000`，瀏覽器回報的版本是 Chrome `157.0.8103.51`。
+
+這段是 11/14 舊腳本的重現步驟。腳本會用固定 ID，且部分前置檢查失敗後仍繼續操作；這次沒有再用它跑測試。現在請優先使用上方的新聯測 runner，它會建立新的測試資料庫，並從 seed 取得實際 ID。
 
 使用全新的隔離 seed，確認有買家 `1`、餐點 `1` 單價 `80`、餐點 `2` 單價 `100`、示範外送員 `2`。**先完成 seed 最初兩張待接訂單，使清單為空**，再執行腳本。腳本使用這組 fixture，自己的 ID 不同時，要先調整測試設定，不能直接對任意資料庫執行。
 
@@ -115,8 +148,20 @@ npx --yes --package @playwright/cli@0.1.24 playwright-cli --session ntou-qa run-
 
 請保留 JSON、stderr、seed JSON、build 日誌和瀏覽器／影片紀錄。seed 裡的帳號是合成資料的 ID，**登入驗證還沒完成**。接單程式和文件整理在 `feature/yves20716-order-acceptance` 分支，這次測試結果的固定副本放在 `docs/evidence`，可提供給組長。重跑產生的 `artifacts` 和本機設定 `.local-runtime` 仍需各自保存，私有連線設定及密碼不要分享。
 
-[字幕 Demo](evidence/demo-captioned.mp4)共 52.44 秒，[時間軸／講稿](acceptance-demo.md)也已更新。前 36.44 秒保留 2026-11-14 的接單操作，後 16 秒是 2026-11-15 補錄的資料庫查詢，兩段並非連續拍攝。
+舊版[字幕 Demo](evidence/demo-captioned.mp4)共 52.44 秒。前 36.44 秒保留 2026-11-14 的接單操作，後 16 秒是 2026-11-15 補錄的資料庫查詢，兩段並非連續拍攝。新版雙頁錄影使用上面的入口，各版[時間軸與講稿](acceptance-demo.md)另附。
 
 補錄使用[這份 SQL](evidence/demo-database-query.sql)，只讀取 `127.0.0.1:3307` 上的原 Demo schema `ntou_acceptance_demo_20261114_b8877ae024`，沒有重新接單或修改訂單資料。買家 `1` 的兩筆餐點由外送員 `2` 接下，買家 `4` 的一筆餐點由外送員 `3` 接下，三筆都是 `PROCESSING`。結果見[查詢紀錄](evidence/browser/demo-database-query.json)與[畫面](evidence/browser/demo-database-query.png)。若要在自己的新 seed 查詢，需改用那次產生的 schema、買家 ID 和時間戳。
 
 這些資料只涵蓋我負責的接單模組，課程作業的繳交狀態需要另外確認。
+
+### 錄新版影片
+
+先啟動上面的 `local_demo.py`，記下輸出的 `folder`。從專案根目錄執行下列命令，把 `RUN_FOLDER` 和 `PLAYWRIGHT_MODULE` 換成本機路徑：
+
+```sh
+node frontend/tests/record-acceptance-demo.mjs RUN_FOLDER PLAYWRIGHT_MODULE --rehearse
+```
+
+試跑通過後，先結束 `local_demo.py`，再啟動一次，讓錄影使用兩張新的待接單。用新輸出的資料夾重新執行，拿掉 `--rehearse` 就會錄影。Playwright 的錄影元件需要已安裝；如果安裝在專案的 `.local-runtime/playwright-browsers`，執行前設定 `PLAYWRIGHT_BROWSERS_PATH="$PWD/.local-runtime/playwright-browsers"`。這支腳本不會下載套件。
+
+結果放在該資料夾的 `recording/`，包含 WebM、各階段截圖、操作時間和實際 HTTP／MySQL 紀錄。新版影片和實際錄製結果見 [Demo 說明](acceptance-demo.md)。

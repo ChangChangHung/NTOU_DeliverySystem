@@ -1,0 +1,112 @@
+{
+  "kind": "read-only browser response injection",
+  "api_requests_forwarded": 0,
+  "backend_writes_forwarded": 0,
+  "reports": [
+    {
+      "name": "baseline",
+      "before": {
+        "pending": [
+          "買家 #1012026-11-15 22:00:01送餐地址：測試地址 101A的餐點 × 1（測試餐廳）NT$ 80餐點小計：NT$ 80接單"
+        ],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 0,
+        "empty_accepted": 1
+      }
+    },
+    {
+      "name": "wrong-order-meals",
+      "before": {
+        "pending": [
+          "買家 #1012026-11-15 22:00:01送餐地址：測試地址 101B的餐點 × 1（測試餐廳）NT$ 100餐點小計：NT$ 100接單"
+        ],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 0,
+        "empty_accepted": 1
+      },
+      "intercepted_acceptance": {
+        "scenario": "wrong-order-meals",
+        "path": "/api/process_order",
+        "body": {
+          "buyer_id": 101,
+          "timestamp": "2026-11-15 22:00:01",
+          "deliverer_id": 2
+        }
+      }
+    },
+    {
+      "name": "wrong-delivery-owner",
+      "before": {
+        "pending": [],
+        "accepted": [
+          "買家 #1012026-11-15 22:00:01送餐地址：測試地址 202A的餐點 × 1（測試餐廳）NT$ 80餐點小計：NT$ 80已接單"
+        ],
+        "alerts": [],
+        "empty_pending": 1,
+        "empty_accepted": 0
+      }
+    },
+    {
+      "name": "split-acceptance",
+      "before": {
+        "pending": [],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 1,
+        "empty_accepted": 1
+      },
+      "after_refresh": {
+        "pending": [],
+        "accepted": [
+          "買家 #1012026-11-15 22:00:01送餐地址：測試地址 101A的餐點 × 1（測試餐廳）NT$ 80餐點小計：NT$ 80已接單"
+        ],
+        "alerts": [],
+        "empty_pending": 1,
+        "empty_accepted": 0
+      }
+    },
+    {
+      "name": "split-abandonment",
+      "before": {
+        "pending": [],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 1,
+        "empty_accepted": 1
+      },
+      "after_refresh": {
+        "pending": [
+          "買家 #1012026-11-15 22:00:01送餐地址：測試地址 101A的餐點 × 1（測試餐廳）NT$ 80餐點小計：NT$ 80接單"
+        ],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 0,
+        "empty_accepted": 1
+      }
+    },
+    {
+      "name": "unknown-order-state",
+      "before": {
+        "pending": [],
+        "accepted": [],
+        "alerts": [],
+        "empty_pending": 1,
+        "empty_accepted": 1
+      }
+    }
+  ],
+  "intercepted_writes": [
+    {
+      "scenario": "wrong-order-meals",
+      "path": "/api/process_order",
+      "body": {
+        "buyer_id": 101,
+        "timestamp": "2026-11-15 22:00:01",
+        "deliverer_id": 2
+      }
+    }
+  ],
+  "request_count": 45
+}

@@ -1,8 +1,9 @@
 """Real MySQL 8 acceptance checks for the existing process_order API.
 
 Run with explicit local DB credentials and NTOU_ACCEPTANCE_ALLOW_CREATE=1.
-The script creates a fresh ntou_acceptance_* schema, never deletes data, and
-prints a JSON evidence summary. It does not start or contact an HTTP server.
+The script creates a fresh ntou_acceptance_* schema and prints JSON evidence.
+The response-race case deletes only its newly created synthetic order. No HTTP
+service is started or contacted, and the schema is retained after each run.
 """
 
 from __future__ import annotations
@@ -190,6 +191,7 @@ class OrderAcceptanceMySQLTests(unittest.TestCase):
         for states in [
             ("CANCELLED", "CANCELLED"), ("COMPLETED", "COMPLETED"),
             ("PROCESSING", "PROCESSING"), ("PENDING", "PROCESSING"),
+            ("IN_CART", "IN_CART"), ("PENDING", "IN_CART"),
         ]:
             with self.subTest(states=states):
                 fixture = create_fixture(self.server, states=states)
@@ -253,7 +255,337 @@ class OrderAcceptanceMySQLTests(unittest.TestCase):
         self.record(self._testMethodName, self.fixture, [{"status": code, "body": body}], snapshot,
                     synthetic_failure_injection=True, updated_tables_before_failure=updated_tables)
 
-    def test_returned_order_timestamp_can_create_delivery_at_fractional_boundaries(self):
+    def test_acceptance_keeps_other_buyer_and_other_timestamp_orders_unchanged(self):
+        other_fixture = create_fixture(self.server)
+        fixed_time = datetime(2033, 2, 3, 4, 5, 6)
+        identities = []
+        responses = []
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        for fixture in (self.fixture, other_fixture):
+            with self.server.app.test_client() as client:
+                with patch.object(self.server, "datetime", FixedClock):
+                    created = client.post("/api/add_new_order", json={
+                        "buyer_id": fixture["buyer_id"],
+                        "meals": [{"meal_id": meal, "quantity": 1} for meal in fixture["meal_ids"]],
+                    })
+                self.assertEqual(created.status_code, 201, created.get_json())
+                body = created.get_json()
+                identity = {"buyer_id": fixture["buyer_id"], "timestamp": body["timestamp"]}
+                identities.append(identity)
+                delivery = client.post("/api/add_new_delivery", json={
+                    **identity, "pickup_address": "不同買家的接單聯測地址",
+                })
+                self.assertEqual(delivery.status_code, 201, delivery.get_json())
+                responses.extend([
+                    {"path": "/api/add_new_order", "status": created.status_code, "body": body},
+                    {"path": "/api/add_new_delivery", "status": delivery.status_code,
+                     "body": delivery.get_json()},
+                ])
+        self.assertEqual(identities[0]["timestamp"], identities[1]["timestamp"])
+        self.assertNotEqual(identities[0]["buyer_id"], identities[1]["buyer_id"])
+        other_before = self.assert_snapshot(identities[1], ["PENDING", "PENDING"], None)
+        same_buyer_before = self.assert_snapshot(self.fixture, ["PENDING", "PENDING"], None)
+        self.assertNotEqual(self.fixture["timestamp"], identities[0]["timestamp"])
+        courier = self.fixture["deliverer_ids"][0]
+        code, body = self.post({**identities[0], "deliverer_id": courier})
+        self.assertEqual(code, 200, body)
+        responses.append({"path": "/api/process_order", "status": code, "body": body})
+        accepted = self.assert_snapshot(identities[0], ["PROCESSING", "PROCESSING"], courier)
+        other_after = self.assert_snapshot(identities[1], ["PENDING", "PENDING"], None)
+        self.assertEqual(other_before, other_after)
+        same_buyer_after = self.assert_snapshot(self.fixture, ["PENDING", "PENDING"], None)
+        self.assertEqual(same_buyer_before, same_buyer_after)
+        self.record(self._testMethodName, identities[0], responses, accepted,
+                    unrelated_order={"identity": identities[1], "before": other_before,
+                                     "after": other_after},
+                    same_buyer_other_order={
+                        "identity": {"buyer_id": self.fixture["buyer_id"],
+                                     "timestamp": self.fixture["timestamp"]},
+                        "before": same_buyer_before, "after": same_buyer_after,
+                    },
+                    injected_clock=fixed_time.strftime("%Y-%m-%d %H:%M:%S"))
+
+    def test_failed_order_commit_returns_json_and_leaves_no_partial_order(self):
+        fixed_time = datetime(2034, 3, 4, 5, 6, 7)
+        identity = {"buyer_id": self.fixture["buyer_id"],
+                    "timestamp": fixed_time.strftime("%Y-%m-%d %H:%M:%S")}
+        flushed = []
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        def fail_commit_after_flush():
+            self.server.db.session.flush()
+            flushed.append(True)
+            raise RuntimeError("synthetic order commit failure after INSERT")
+
+        before = self.assert_snapshot(identity, [], None, delivery_exists=False)
+        with self.server.app.test_client() as client:
+            with patch.object(self.server, "datetime", FixedClock), patch.object(
+                self.server.db.session, "commit", side_effect=fail_commit_after_flush,
+            ):
+                response = client.post("/api/add_new_order", json={
+                    "buyer_id": self.fixture["buyer_id"],
+                    "meals": [{"meal_id": meal, "quantity": 1} for meal in self.fixture["meal_ids"]],
+                })
+            self.assertEqual(response.status_code, 500)
+            self.assertTrue(response.is_json, response.get_data(as_text=True))
+            body = response.get_json()
+        self.assertEqual(flushed, [True])
+        self.assertIs(body["success"], False)
+        self.assertIn("message", body)
+        after = self.assert_snapshot(identity, [], None, delivery_exists=False)
+        self.assertEqual(before, after)
+        self.record(self._testMethodName, identity, [{
+            "path": "/api/add_new_order", "status": response.status_code, "body": body,
+        }], after, synthetic_failure_injection=True, flushed_before_failure=True)
+
+    def test_same_second_checkout_rejects_before_and_after_acceptance(self):
+        fixed_time = datetime(2036, 1, 2, 3, 4, 5)
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        payload = {
+            "buyer_id": self.fixture["buyer_id"],
+            "meals": [{"meal_id": meal, "quantity": 1} for meal in self.fixture["meal_ids"]],
+        }
+        responses = []
+        with patch.object(self.server, "datetime", FixedClock):
+            with self.server.app.test_client() as client:
+                created = client.post("/api/add_new_order", json=payload)
+                self.assertEqual(created.status_code, 201, created.get_json())
+                identity = {"buyer_id": payload["buyer_id"], "timestamp": created.get_json()["timestamp"]}
+                delivery = client.post("/api/add_new_delivery", json={
+                    **identity, "pickup_address": "同秒重複下單測試地址",
+                })
+                self.assertEqual(delivery.status_code, 201, delivery.get_json())
+                duplicate = client.post("/api/add_new_order", json=payload)
+                self.assertEqual(duplicate.status_code, 409, duplicate.get_json())
+            before_accept = self.assert_snapshot(identity, ["PENDING", "PENDING"], None)
+            courier = self.fixture["deliverer_ids"][0]
+            code, body = self.post({**identity, "deliverer_id": courier})
+            self.assertEqual(code, 200, body)
+            before_retry = self.assert_snapshot(identity, ["PROCESSING", "PROCESSING"], courier)
+            with self.server.app.test_client() as client:
+                after_accept = client.post("/api/add_new_order", json=payload)
+                self.assertEqual(after_accept.status_code, 409, after_accept.get_json())
+            final = self.assert_snapshot(identity, ["PROCESSING", "PROCESSING"], courier)
+        self.assertEqual(before_retry, final)
+        self.assertEqual({row["order_id"] for row in final["orders"]},
+                         {row["order_id"] for row in created.get_json()["orders"]})
+        for path, response in (("/api/add_new_order", created),
+                               ("/api/add_new_delivery", delivery),
+                               ("/api/add_new_order", duplicate)):
+            responses.append({"path": path, "status": response.status_code, "body": response.get_json()})
+        responses.extend([
+            {"path": "/api/process_order", "status": code, "body": body},
+            {"path": "/api/add_new_order", "status": after_accept.status_code,
+             "body": after_accept.get_json()},
+        ])
+        self.record(self._testMethodName, identity, responses, final,
+                    before_accept=before_accept, injected_clock=identity["timestamp"])
+
+    def test_concurrent_same_buyer_checkout_creates_only_one_order_group(self):
+        from sqlalchemy import event
+
+        fixed_time = datetime(2037, 1, 2, 3, 4, 5)
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        identity = {"buyer_id": self.fixture["buyer_id"],
+                    "timestamp": fixed_time.strftime("%Y-%m-%d %H:%M:%S")}
+        payload = {
+            "buyer_id": self.fixture["buyer_id"],
+            "meals": [{"meal_id": meal, "quantity": 1} for meal in self.fixture["meal_ids"]],
+        }
+        condition = threading.Condition()
+        lock_connections = set()
+
+        def observe_parent_lock(connection, _cursor, statement, _parameters, _context, _many):
+            sql = " ".join(statement.upper().split())
+            if sql.startswith("SELECT") and "FROM USERS" in sql and "FOR UPDATE" in sql:
+                with condition:
+                    lock_connections.add(connection.connection.driver_connection.thread_id())
+                    condition.notify_all()
+
+        def checkout():
+            with self.server.app.test_client() as client:
+                response = client.post("/api/add_new_order", json=payload)
+                return response.status_code, response.get_json()
+
+        with self.server.app.app_context():
+            engine = self.server.db.engine
+        event.listen(engine, "before_cursor_execute", observe_parent_lock)
+        blocker = self.settings.connect()
+        try:
+            blocker.begin()
+            with blocker.cursor() as cursor:
+                cursor.execute("SELECT user_id FROM users WHERE user_id=%s FOR UPDATE",
+                               (self.fixture["buyer_id"],))
+                self.assertIsNotNone(cursor.fetchone())
+            with patch.object(self.server, "datetime", FixedClock), ThreadPoolExecutor(max_workers=2) as pool:
+                futures = [pool.submit(checkout) for _ in range(2)]
+                try:
+                    with condition:
+                        reached = condition.wait_for(lambda: len(lock_connections) == 2, timeout=5)
+                    self.assertTrue(reached, "Both checkouts must reach the parent lock on separate connections.")
+                    self.assertTrue(all(not future.done() for future in futures))
+                finally:
+                    blocker.commit()
+                responses = [future.result(timeout=10) for future in futures]
+        finally:
+            blocker.rollback()
+            blocker.close()
+            event.remove(engine, "before_cursor_execute", observe_parent_lock)
+        self.assertEqual(sorted(code for code, _ in responses), [201, 409], responses)
+        snapshot = self.assert_snapshot(identity, ["PENDING", "PENDING"], None, delivery_exists=False)
+        successful = next(body for code, body in responses if code == 201)
+        self.assertEqual(successful["timestamp"], identity["timestamp"])
+        self.assertEqual({row["order_id"] for row in snapshot["orders"]},
+                         {row["order_id"] for row in successful["orders"]})
+        self.record(self._testMethodName, identity, [
+            {"path": "/api/add_new_order", "status": code, "body": body} for code, body in responses
+        ], snapshot, distinct_mysql_connections=len(lock_connections),
+                    injected_clock=identity["timestamp"])
+
+    def test_checkout_rejects_existing_delivery_key_even_without_order_rows(self):
+        fixed_time = datetime(2038, 1, 2, 3, 4, 5)
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        identity = {"buyer_id": self.fixture["buyer_id"],
+                    "timestamp": fixed_time.strftime("%Y-%m-%d %H:%M:%S")}
+        with self.server.app.app_context():
+            self.server.db.session.add(self.server.Delivery(
+                buyer_id=identity["buyer_id"], timestamp=fixed_time,
+                deliverer_id=None, pickup_address="保留的合成外送資料",
+            ))
+            self.server.db.session.commit()
+        before = self.assert_snapshot(identity, [], None)
+        with self.server.app.test_client() as client, patch.object(self.server, "datetime", FixedClock):
+            response = client.post("/api/add_new_order", json={
+                "buyer_id": identity["buyer_id"],
+                "meals": [{"meal_id": self.fixture["meal_ids"][0], "quantity": 1}],
+            })
+        self.assertEqual(response.status_code, 409, response.get_json())
+        after = self.assert_snapshot(identity, [], None)
+        self.assertEqual(before, after)
+        self.record(self._testMethodName, identity, [{
+            "path": "/api/add_new_order", "status": response.status_code, "body": response.get_json(),
+        }], after, preexisting_delivery_without_order=True)
+
+    def test_quantity_database_limit_rejects_entire_request_before_writing(self):
+        fixed_time = datetime(2039, 1, 2, 3, 4, 5)
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        identity = {"buyer_id": self.fixture["buyer_id"],
+                    "timestamp": fixed_time.strftime("%Y-%m-%d %H:%M:%S")}
+        with self.server.app.test_client() as client, patch.object(self.server, "datetime", FixedClock):
+            rejected = client.post("/api/add_new_order", json={
+                "buyer_id": identity["buyer_id"],
+                "meals": [
+                    {"meal_id": self.fixture["meal_ids"][0], "quantity": 1},
+                    {"meal_id": self.fixture["meal_ids"][1], "quantity": 2_147_483_648},
+                ],
+            })
+        self.assertEqual(rejected.status_code, 400, rejected.get_json())
+        self.assertIs(rejected.get_json()["success"], False)
+        rejected_snapshot = self.assert_snapshot(identity, [], None, delivery_exists=False)
+        # This is a storage limit, not a newly invented business quantity cap.
+        with self.server.app.test_client() as client, patch.object(self.server, "datetime", FixedClock):
+            accepted = client.post("/api/add_new_order", json={
+                "buyer_id": identity["buyer_id"],
+                "meals": [{"meal_id": self.fixture["meal_ids"][0], "quantity": 2_147_483_647}],
+            })
+        self.assertEqual(accepted.status_code, 201, accepted.get_json())
+        self.assertEqual(accepted.get_json()["orders"][0]["quantity"], 2_147_483_647)
+        snapshot = self.assert_snapshot(identity, ["PENDING"], None, delivery_exists=False)
+        self.record(self._testMethodName, identity, [
+            {"path": "/api/add_new_order", "status": response.status_code, "body": response.get_json()}
+            for response in (rejected, accepted)
+        ], snapshot, rejected_request_snapshot=rejected_snapshot)
+
+    def test_checkout_response_survives_delete_after_commit(self):
+        from sqlalchemy import event
+        from sqlalchemy.orm import Session
+
+        fixed_time = datetime(2040, 1, 2, 3, 4, 5)
+
+        class FixedClock(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                return fixed_time
+
+        identity = {"buyer_id": self.fixture["buyer_id"],
+                    "timestamp": fixed_time.strftime("%Y-%m-%d %H:%M:%S")}
+        checkout_thread = threading.get_ident()
+        committed = []
+        deletion_responses = []
+
+        def delete_from_another_request():
+            with self.server.app.test_client() as client:
+                response = client.delete("/api/delete_order", json=identity)
+                return {"path": "/api/delete_order", "status": response.status_code,
+                        "body": response.get_json()}
+
+        def delete_after_checkout_commit(_session):
+            if threading.get_ident() != checkout_thread or committed:
+                return
+            committed.append(database_snapshot(self.settings, identity))
+            # The create transaction has committed. A different request deletes
+            # its rows before the original handler finishes building its response.
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                deletion_responses.append(pool.submit(delete_from_another_request).result(timeout=10))
+
+        event.listen(Session, "after_commit", delete_after_checkout_commit)
+        try:
+            with self.server.app.test_client() as client, patch.object(self.server, "datetime", FixedClock):
+                response = client.post("/api/add_new_order", json={
+                    "buyer_id": identity["buyer_id"],
+                    "meals": [{"meal_id": meal, "quantity": 1} for meal in self.fixture["meal_ids"]],
+                })
+                body = response.get_json()
+        finally:
+            event.remove(Session, "after_commit", delete_after_checkout_commit)
+        final = self.assert_snapshot(identity, [], None, delivery_exists=False)
+        self.record(self._testMethodName, identity, [
+            {"path": "/api/add_new_order", "status": response.status_code, "body": body},
+            *deletion_responses,
+        ], final, committed_before_concurrent_delete=committed,
+                    scheduling_hook="delete_order request after create commit, before response serialization")
+        self.assertEqual(len(committed), 1)
+        self.assertEqual([row["state"] for row in committed[0]["orders"]], ["PENDING", "PENDING"])
+        self.assertEqual(len(deletion_responses), 1)
+        self.assertEqual(deletion_responses[0]["status"], 200, deletion_responses)
+        self.assertEqual(deletion_responses[0]["body"]["deleted_count"], 2)
+        self.assertEqual(response.status_code, 201, body)
+        self.assertTrue(body["success"])
+        self.assertEqual(body["timestamp"], identity["timestamp"])
+        self.assertEqual({row["order_id"] for row in body["orders"]},
+                         {row["order_id"] for row in committed[0]["orders"]})
+        self.assertEqual([row["order_state"] for row in body["orders"]], ["pending", "pending"])
+
+    def test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries(self):
         for microsecond in [0, 499_999, 500_000, 999_999]:
             with self.subTest(microsecond=microsecond):
                 fixture = create_fixture(self.server)
@@ -264,24 +596,74 @@ class OrderAcceptanceMySQLTests(unittest.TestCase):
                     def now(cls, tz=None):
                         return fixed_time
 
-                with self.server.app.test_client() as client:
-                    with patch.object(self.server, "datetime", FixedClock):
-                        created = client.post("/api/add_new_order", json={
+                responses = []
+
+                def request(path, payload=None, expected_status=200):
+                    with self.server.app.test_client() as client:
+                        response = (client.get(path) if payload is None
+                                    else client.post(path, json=payload))
+                        body = response.get_json()
+                    self.assertEqual(response.status_code, expected_status, body)
+                    responses.append({"path": path, "status": response.status_code, "body": body})
+                    return body
+
+                with patch.object(self.server, "datetime", FixedClock):
+                    created = request("/api/add_new_order", {
                             "buyer_id": fixture["buyer_id"],
-                            "meals": [{"meal_id": meal, "quantity": 1} for meal in fixture["meal_ids"]],
-                        })
-                    self.assertEqual(created.status_code, 201, created.get_json())
-                    body = created.get_json()
-                    identity = {"buyer_id": fixture["buyer_id"], "timestamp": body["timestamp"]}
-                    delivery = client.post("/api/add_new_delivery", json={
-                        **identity, "pickup_address": "合成時間精度驗收資料",
-                    })
-                    self.assertEqual(delivery.status_code, 201, delivery.get_json())
-                snapshot = self.assert_snapshot(identity, ["PENDING", "PENDING"], None)
-                self.record(self._testMethodName, identity, [
-                    {"status": created.status_code, "body": body},
-                    {"status": delivery.status_code, "body": delivery.get_json()},
-                ], snapshot, injected_clock_microsecond=microsecond)
+                            "meals": [{"meal_id": meal, "quantity": index + 1}
+                                      for index, meal in enumerate(fixture["meal_ids"])],
+                        }, 201)
+                self.assertTrue(created["success"])
+                identity = {"buyer_id": fixture["buyer_id"], "timestamp": created["timestamp"]}
+                self.assertEqual(len(created["orders"]), 2)
+                self.assertTrue(all(row["timestamp"] == identity["timestamp"] for row in created["orders"]))
+                courier = fixture["deliverer_ids"][0]
+                request("/api/process_order", {**identity, "deliverer_id": courier}, 404)
+                missing_delivery_snapshot = self.assert_snapshot(
+                    identity, ["PENDING", "PENDING"], None, delivery_exists=False,
+                )
+                delivery = request("/api/add_new_delivery", {
+                    **identity, "pickup_address": "合成時間精度驗收資料",
+                }, 201)
+                self.assertTrue(delivery["success"])
+                self.assertEqual(delivery["delivery"]["timestamp"], identity["timestamp"])
+
+                # The lobby gets a string buyer_id and reuses the returned timestamp.
+                with self.server.app.test_client() as client:
+                    listed = client.get("/api/view_order_by_stamp")
+                    self.assertEqual(listed.status_code, 200, listed.get_json())
+                    matching_stamps = [stamp for stamp in listed.get_json()
+                                       if str(stamp["buyer_id"]) == str(identity["buyer_id"])
+                                       and stamp["timestamp"] == identity["timestamp"]]
+                self.assertEqual(matching_stamps, [{**identity, "buyer_id": str(identity["buyer_id"])}])
+                listed_identity = matching_stamps[0]
+                responses.append({"path": "/api/view_order_by_stamp", "status": 200,
+                                  "matching_stamps": matching_stamps})
+                before_meals = request("/api/view_meals_of_order", listed_identity)
+                before_delivery = request("/api/view_delivery", listed_identity)
+                self.assertEqual([row["order_state"] for row in before_meals], ["pending", "pending"])
+                self.assertEqual([row["quantity"] for row in before_meals], [1, 2])
+                self.assertEqual(len(before_delivery), 1)
+                self.assertIsNone(before_delivery[0]["deliverer_id"])
+
+                accepted = request("/api/process_order", {**listed_identity, "deliverer_id": courier})
+                self.assertTrue(accepted["success"])
+                self.assertEqual(accepted["buyer_id"], identity["buyer_id"])
+                self.assertEqual(accepted["timestamp"], identity["timestamp"])
+                self.assertEqual(accepted["deliverer_id"], courier)
+                self.assertEqual({row["order_id"] for row in accepted["processed_orders"]},
+                                 {row["order_id"] for row in created["orders"]})
+                after_meals = request("/api/view_meals_of_order", listed_identity)
+                after_delivery = request("/api/view_delivery", listed_identity)
+                self.assertEqual([row["order_state"] for row in after_meals], ["processing", "processing"])
+                self.assertEqual(len(after_delivery), 1)
+                self.assertEqual(after_delivery[0]["deliverer_id"], courier)
+                snapshot = self.assert_snapshot(identity, ["PROCESSING", "PROCESSING"], courier)
+                self.assertEqual({row["order_id"] for row in snapshot["orders"]},
+                                 {row["order_id"] for row in created["orders"]})
+                self.record(self._testMethodName, identity, responses, snapshot,
+                            before_delivery_created=missing_delivery_snapshot,
+                            injected_clock_microsecond=microsecond)
 
 
 def main() -> int:

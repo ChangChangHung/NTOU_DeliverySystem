@@ -167,7 +167,13 @@ def write_json(path, value, *, exclusive=False):
 
 def run_job(config, action):
     require_server(config)
-    script = (BACKEND / "tests" / "test_order_acceptance_mysql.py" if action == "test"
+    test_scripts = {
+        "test": "test_order_acceptance_mysql.py",
+        "test-lifecycle": "test_order_lifecycle_mysql.py",
+        "test-catalog": "test_catalog_validation_mysql.py",
+    }
+    is_test = action in test_scripts
+    script = (BACKEND / "tests" / test_scripts[action] if is_test
               else BACKEND / "scripts" / "seed_acceptance_demo.py")
     result = subprocess.run(
         [sys.executable, "-B", str(script)], cwd=ROOT, env=config.environment(),
@@ -175,7 +181,7 @@ def run_job(config, action):
     )
     ARTIFACTS.mkdir(exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ") + "-" + uuid.uuid4().hex[:6]
-    prefix = "acceptance-test" if action == "test" else "freshseed"
+    prefix = ("acceptance-test" if action == "test" else action) if is_test else "freshseed"
     artifact = ARTIFACTS / f"{prefix}-{stamp}.json"
     stdout = config.redact(result.stdout)
     stderr = config.redact(result.stderr)
@@ -191,7 +197,7 @@ def run_job(config, action):
             handle.write(stdout)
         raise RuntimeError(f"The {action} command did not return JSON. See {failed} and {stderr_path}.")
     write_json(artifact, payload, exclusive=True)
-    success = result.returncode == 0 and (action != "test" or payload.get("successful") is True)
+    success = result.returncode == 0 and (not is_test or payload.get("successful") is True)
     if success and action == "seed":
         validate_demo(config, payload)
         write_json(ARTIFACTS / "freshseed.json", payload)
@@ -200,7 +206,7 @@ def run_job(config, action):
         "command": action, "successful": success, "artifact": str(artifact),
         "stderr": str(stderr_path) if stderr else None,
         "database": payload.get("metadata", {}).get("database"),
-        **({"tests_run": payload.get("tests_run")} if action == "test" else {
+        **({"tests_run": payload.get("tests_run")} if is_test else {
             "demo_courier_ids": payload.get("demo_courier_ids"),
             "frontend_environment": payload.get("frontend_environment"),
         }),
@@ -247,12 +253,12 @@ def serve(config):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("status", "mysql-start", "mysql-stop", "test", "seed", "serve"))
+    parser.add_argument("command", choices=("status", "mysql-start", "mysql-stop", "test", "test-lifecycle", "test-catalog", "seed", "serve"))
     args = parser.parse_args()
     config = None
     try:
         config = Configuration.load()
-        if args.command in {"test", "seed"}:
+        if args.command in {"test", "test-lifecycle", "test-catalog", "seed"}:
             return run_job(config, args.command)
         if args.command == "serve":
             return serve(config)

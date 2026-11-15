@@ -4,7 +4,11 @@
 
 我在 2026-11-14 跑的 MySQL 自動測試 **10/10 通過**，包含 10 輪競爭接單及雙表更新後的 rollback；前端補強 QA **16/16 通過、0 頁面錯誤**，typecheck／build 也通過。字幕 Demo 共 52.44 秒，包含原本 36.44 秒的操作和 2026-11-15 補錄的 16 秒資料庫查詢。測試紀錄和範圍見[驗收對照表](acceptance-checklist.md)，沒有把 PR 作者先前的測試敘述算進來。
 
-PDF 版：[接單設計與驗收素材](接單設計與驗收素材.pdf)。
+11/15 晚上新增「我的已接訂單」，兩位外送員可以直接在各自頁面看到接到的餐點。這次瀏覽器聯測 **8/8 通過**，獨立 MySQL 查詢的 **4 張訂單也都一致**；[新一輪結果](evidence/accepted-orders-20261115/integration-results.json)與[串接說明](acceptance-integration.md)另附。前面列的是舊版紀錄，後端 12/12 則是先前 11/15 跑的結果，這次沒有重新計入。
+
+設計 PDF：[本次已接清單與影片補充](接單設計與測試-更新版.pdf)，原本的 [API 與設計素材](接單設計與驗收素材.pdf)也保留。各版影片與講稿見 [Demo 素材](acceptance-demo.md)。
+
+11/15 晚上檢查資料庫後又補了一批修正：同秒下單不再混單，接單與其他狀態操作會鎖定資料再判斷，刪除會一起處理 Orders 和 Delivery，回應也不會因提交後資料被刪除而誤報失敗。本輪後端 50/50、雙頁聯測 8/8、前端回應與版面 13/13 都通過，四張資料庫查詢一致。給組長的修正明細與待確認規則放在 [bug 檢查紀錄](acceptance-bug-review.md)；上面的 PDF 與影片保留錄製當輪的內容。
 
 ## 來源與個人範圍
 
@@ -14,11 +18,13 @@ PDF 版：[接單設計與驗收素材](接單設計與驗收素材.pdf)。
 | --- | --- |
 | PR 的 main 基底 | `2e04307c1b8b54c64e02f5eaedeb54e71cedcdb9`；已有 Flask、SQLAlchemy 資料模型與接單等 API |
 | PR #1 head | `bb80ed42ba398f3bf801aebdc127b7fdfdaebf3e`；新增 `DriverLobby.vue`，統一下單時間戳至秒、在接單查詢加入 `with_for_update()`，開發 proxy 改接本機 Flask |
-| 我接著完成的部分 | 接單 Demo 入口、前端防重點擊與錯誤／刷新處理、資料檢查；新增隔離 MySQL 測試、合成 seed、可重跑的本機 runner 與交接文件。後端測試與列出的瀏覽器流程都已通過，詳細結果見驗收表 |
+| 我接著完成的部分 | 接單 Demo 入口、防重點擊、錯誤／刷新處理與「我的已接訂單」；新增隔離 MySQL 測試、合成 seed、本機 runner 與交接文件。各輪實測結果見驗收表 |
 
-我主要確認接單按鈕是否送出正確資料、同單所有餐點是否一起更新，以及資料庫記錄的外送員是否就是接單成功的人。也測了重複接單、成功與衝突提示、載入錯誤。大廳頁面和後端接單邏輯都是同學原本的成果，我接著補強互動和測試。
+我主要確認接單按鈕是否送出正確資料、同單所有餐點是否一起更新，以及資料庫記錄的外送員是否就是接單成功的人。也測了重複接單、成功與衝突提示、載入錯誤。大廳和接單 API 以同學原本的成果為基礎，我接著補互動、測試，以及這次實際重現的交易問題。
 
 買家端 `App.vue` 仍使用舊餐廳／下單 API，完整點餐流程還要由團隊整合。我這次負責接單模組，不包含完成訂單、付款、退款、聊天和全組 SDD。示範用外送員 ID 是從測試資料選出的使用者，**登入、身分驗證和角色權限尚未完成**。
+
+11/15 補充的雙頁聯測、下單錯誤修正和待串接事項，整理在[接單聯測與後續串接](acceptance-integration.md)，組長更新設計文件時可一起參考。
 
 ## 接單 API（SDD 第 2 章）
 
@@ -108,7 +114,7 @@ classDiagram
 
 ## 接單流程（SDD 第 3 章）
 
-後端驗證輸入與使用者後，以 `SELECT … FOR UPDATE` 查詢同一 `(buyer_id, timestamp)` 的全部 `Orders`。只要其中一筆不是待接狀態，就回 `409`；通過檢查後，再確認 `Delivery` 存在且未分配給另一位外送員。最後將全部餐點改為 `PROCESSING`，設定 `Delivery.deliverer_id`，一次 commit。
+後端驗證輸入與使用者後，按 `order_id` 排序，以 `SELECT … FOR UPDATE` 查詢同一 `(buyer_id, timestamp)` 的全部 `Orders`。只要其中一筆不是待接狀態，就回 `409`；通過檢查後，同樣鎖定 `Delivery`，確認它存在且未分配給另一位外送員。最後將全部餐點改為 `PROCESSING`，設定 `Delivery.deliverer_id`，保存回應需要的資料，再一次 commit；成功後才回傳。
 
 以下順序圖是目前的接單流程，哪些步驟已測過則列在驗收對照表。
 
@@ -125,18 +131,18 @@ sequenceDiagram
     API->>DB: 確認 Users 存在
     API->>DB: SELECT 同單 Orders FOR UPDATE
     alt 同單餐點全部為 PENDING
-        API->>DB: 查詢對應 Delivery
+        API->>DB: SELECT 對應 Delivery FOR UPDATE
         alt 外送紀錄存在且可由本次外送員承接
             API->>DB: 更新全部 Orders 與 Delivery，commit
             API-->>UI: 200，processed_orders 與外送員 ID
-            UI->>UI: 顯示成功並刷新待接清單
+            UI->>UI: 顯示成功並刷新待接與我的已接訂單
         else 缺 Delivery 或已分配給其他外送員
             API-->>UI: 404 或 409
             UI->>UI: 顯示原因並更新清單狀態
         end
     else 任一餐點非 PENDING
         API-->>UI: 409，invalid_orders
-        UI->>UI: 顯示衝突並重新取得待接清單
+        UI->>UI: 顯示衝突並重新取得兩份清單
     end
     UI->>UI: 結束送出中狀態
 ```
@@ -172,12 +178,20 @@ stateDiagram-v2
 
 我補上的前端處理如下，測試條件和還沒測到的部分列在驗收對照表：
 
-- 只列出每筆餐點皆為 `pending`、且唯一對應 `Delivery.deliverer_id` 為 `null` 的訂單。空餐點、空外送紀錄及回傳 JSON 的 `404` 安全略過；缺餐點／餐廳資料或其他查詢錯誤會顯示錯誤，不當成正常空清單。
+- 待接清單只列出每筆餐點皆為 `pending`、且唯一對應 `Delivery.deliverer_id` 為 `null` 的訂單。
+- 「我的已接訂單」只列出每筆餐點皆為 `processing`，且 `Delivery.deliverer_id` 等於目前示範外送員 ID 的訂單，顯示買家、時間、地址、餐點與小計。每次進頁面、手動刷新和接單結束後，都一起更新兩份清單。
+- 空餐點、空外送紀錄及回傳 JSON 的 `404` 沿用既有規則略過。其他查詢錯誤顯示原因，載入中或失敗時不顯示已接清單，也不顯示「目前沒有已接訂單」。新結果須整批載入成功才取代兩份清單。
 - 接單送出中停用接單及刷新按鈕，並由函式防止重複送出。
 - 已知 JSON `4xx` 回應（包含 `409`）顯示後端原因並刷新。網路中斷、逾時、`5xx` 或成功回應缺少必要識別資料時，顯示「尚無法確認接單結果」，嘗試刷新，不自動重送接單 POST。
 - 每個請求設 15 秒逾時；新一輪載入會取消舊載入，並以序號防止舊資料覆蓋新清單。接單結果提示與清單載入錯誤分開呈現。
 
-我跑的[瀏覽器測試](evidence/browser/demo-evidence.json)有七個步驟：初始兩張訂單、多餐點接單成功、刷新後仍隱藏、另一外送員先接走另一單、舊清單收到 `409`、離線載入錯誤、恢復連線後顯示空清單。另一外送員是透過真實本機 API 先接單，沒有開第二個瀏覽器同時搶單；並發接單另外由 MySQL 測試驗證。
+「我的已接訂單」使用原本的 `GET /api/view_order_by_stamp`、`POST /api/view_meals_of_order`、`POST /api/view_delivery` 分類資料，沒有新增查詢 API。這是頁面的歸屬篩選，後端仍未驗證登入身分與外送員權限。
+
+新版[8 案瀏覽器測試](evidence/accepted-orders-20261115/browser-results.json)已確認 #2、#3 分別看到自己的訂單與餐點，刷新後仍保留，另一人的單不會混入。第二頁點到舊單會收到真實 `409`；兩頁競爭時也只有成功者的已接清單出現該單。回應中斷和清單載入失敗的測法與結果見[聯測紀錄](acceptance-integration.md)。
+
+錄影可用 [local_demo.py](../backend/scripts/local_demo.py) 同時開啟兩個真實接單頁，另提供 MySQL 唯讀查詢，啟動方法見[執行說明](acceptance-runbook.md#兩位外送員與資料庫的錄影入口)。這是輔助錄影入口，不是新增產品首頁。
+
+11/14 跑的[瀏覽器測試](evidence/browser/demo-evidence.json)有七個步驟：初始兩張訂單、多餐點接單成功、刷新後仍隱藏、另一外送員先接走另一單、舊清單收到 `409`、離線載入錯誤、恢復連線後顯示空清單。當時另一外送員透過真實本機 API 先接單，沒有開第二個瀏覽器同時搶單；以下截圖與補錄保留那一輪的結果。
 
 測完後，我再[獨立讀取資料庫](evidence/browser/demo-database-state.json)，確認買家 `1` 的兩筆餐點都是 `PROCESSING`、外送員是 `2`；買家 `4` 的另一張單則由外送員 `3` 接走。畫面可參考[初始大廳](evidence/browser/01-lobby.png)、[成功](evidence/browser/02-success.png)、[衝突](evidence/browser/03-conflict.png)、[離線](evidence/browser/04-offline.png)、[恢復空清單](evidence/browser/05-recovered-empty.png)。
 
@@ -191,10 +205,11 @@ stateDiagram-v2
 
 | 議題與背景 | 目前程式／待確認內容 | 還需要處理的部分 |
 | --- | --- | --- |
-| 重複接單 | 沿用 PR #1 的行鎖與狀態檢查；本次 10 輪交疊請求皆一個成功、一個衝突 | 證據只涵蓋測試條件下的兩人接單，不涵蓋取消／棄單與接單之間的競爭 |
+| 重複接單與狀態競爭 | 以 PR #1 行鎖為基礎，補上 Delivery 的鎖定讀取及其他狀態操作的行鎖；本輪 10 輪雙人接單皆一個成功、一個衝突 | 已補部分取消／完成／棄單交錯測試；遲到的舊操作者請求還需要身分與版本檢查，見 bug 檢查紀錄 |
 | 身分與權限 | `deliverer_id` 由前端傳入；角色檢查未啟用，路由未從登入 session 取得使用者。正式驗證方式、是否可接自己的單須由團隊決定 | Demo 身分不等於登入功能，授權規則要一起討論 |
-| 同一買家在同一秒下兩單 | 目前以秒級 `(buyer_id, timestamp)` 分組，同秒兩次下單可能共用整單識別 | 改用獨立訂單主鍵、提高精度或其他方案均需團隊討論，不自行修改 schema |
+| 同一買家在同一秒下兩單 | 以秒級 `(buyer_id, timestamp)` 分組；現在第二次請求回 `409`，不再把餐點合併 | 若要同秒兩張都成功，需要另訂整單識別方式，這次未改 schema |
 | 取消／退款及例外 | 現有 API 有取消與棄單，但付款、退款、已購餐後取消、無人接單、顧客未收餐的規則未定 | 依老師回饋補上需求討論；現有狀態更新還不足以涵蓋完整規則 |
+| 刪單規則 | 已確認組內尚未約定；這次保留原有可刪狀態，已修好 Orders 與 Delivery 成對刪除及失敗回滾 | 請組長確認哪些狀態可刪、誰能刪，以及是否需要保留訂單紀錄 |
 | 地址及金額含義 | `pickup_address` 與前端顯示用詞不一致；大廳金額只有餐點小計 | 目前只展示地址和餐點小計，沒有展示取送兩地、外送費計算或付款功能 |
 
 組長可以用這張表整理 Issue、Context、Alternatives、Decision and Rationale、Consequences。還沒決定的項目先保留，等團隊討論後再補方案和理由。
@@ -207,12 +222,13 @@ stateDiagram-v2
 | MySQL 環境 | `127.0.0.1:3307`、MySQL `8.0.46`／InnoDB；schema `ntou_acceptance_test_20261114_20bce73066`，合成資料保留，可回頭確認測試結果 |
 | 後端測試 | 10/10 通過；10 輪競爭、整單持久化、錯誤拒絕、時間戳與雙表更新後 rollback，詳見驗收對照表 |
 | 重跑方式 | [acceptance-runbook.md](acceptance-runbook.md)：我的 Mac 使用現有 runtime，同學則可自備 MySQL |
-| 最終 typecheck／build | [build 日誌](evidence/frontend-build.log)通過，Vite `8.3.4`，含 `dist/driver.html` |
+| 11/14 typecheck／build | [build 日誌](evidence/frontend-build.log)通過，Vite `8.3.4`，含 `dist/driver.html` |
 | 瀏覽器與 DB | 上述七步流程通過；兩張訂單的資料庫狀態與畫面結果一致 |
 | 前端補強 QA | [16/16 報告](evidence/browser/qa-results.json)，0 頁面錯誤；真實接單、單頁防連點與注入錯誤分開標示 |
+| 11/15 已接清單聯測 | [8/8 瀏覽器結果](evidence/accepted-orders-20261115/browser-results.json)，0 頁面錯誤；[4 張獨立 MySQL 查詢](evidence/accepted-orders-20261115/integration-results.json)全部一致。包含兩人歸屬、刷新、真實 `409`、競爭接單及注入錯誤恢復 |
 | 本機設定檢查 | [5/5 安全設定測試](evidence/mysql-safety.log)通過，涵蓋 local host、schema 名稱、必要設定與建庫 opt-in |
 | 回歸偵測 | [反向實驗](evidence/negative-control.json)只在副本移除 `FOR UPDATE`；單次執行的 10 輪全出現雙 `200`，測試產生 10 個失敗斷言，原始檔雜湊不變 |
-| Demo 影片 | [接單功能Demo-含資料庫查詢.mp4](evidence/demo-captioned.mp4)，52.44 秒、1280×900、H.264；前 36.44 秒為原操作，後 16 秒為 2026-11-15 補錄的唯讀 MySQL 查詢。已逐段檢查字幕與畫面，時間軸與講稿見 [Demo 素材](acceptance-demo.md) |
+| 舊版 Demo 影片 | [接單功能Demo-含資料庫查詢.mp4](evidence/demo-captioned.mp4)，52.44 秒、1280×900、H.264；前 36.44 秒為原操作，後 16 秒為 2026-11-15 補錄的唯讀 MySQL 查詢。已逐段檢查字幕與畫面，時間軸與講稿見 [Demo 素材](acceptance-demo.md) |
 | 合成示範資料 | 每次 `seed` 建立新 schema 並輸出實際 ID；示範身分不代表登入功能 |
 
 完整驗收條件見 [acceptance-checklist.md](acceptance-checklist.md)。我整理的是接單模組的測試紀錄和限制，讓組長整合 SDD、Trello 與展示內容。全組是否達到 40% 實作，還要合併其他模組一起確認。

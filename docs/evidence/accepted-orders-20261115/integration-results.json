@@ -1,0 +1,226 @@
+{
+  "run_id": "20261115T135937Z-fce0dc",
+  "completed_at": "2026-11-15T13:59:44.861943+00:00",
+  "passed": true,
+  "browser_cases": {
+    "passed": 8,
+    "total": 8
+  },
+  "metadata": {
+    "database": "ntou_acceptance_demo_20261115_d977c29aad",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "16d40201406e96b7b79ee01b241d41c961b87bc28a002d7ccca5d43e00ba2176",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "playwright_version": "1.66.0-alpha-1794252756000",
+  "database_checks": [
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 21:59:39",
+        "label": "delayed-delivery",
+        "order_ids": [
+          16,
+          17
+        ],
+        "expected_deliverer_id": 2,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 16,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 17,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 21:59:41",
+        "label": "courier-b-own-order",
+        "order_ids": [
+          18,
+          19
+        ],
+        "expected_deliverer_id": 3,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 18,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 19,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 3
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 21:59:42",
+        "label": "two-pages-compete",
+        "order_ids": [
+          20,
+          21
+        ],
+        "expected_deliverer_id": 3,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 20,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 21,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 3
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 21:59:43",
+        "label": "lost-response",
+        "order_ids": [
+          22,
+          23
+        ],
+        "expected_deliverer_id": 2,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 22,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 23,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "passed": true
+    }
+  ],
+  "source_sha256": {
+    "backend/server.py": "16d40201406e96b7b79ee01b241d41c961b87bc28a002d7ccca5d43e00ba2176",
+    "backend/utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+    "frontend/vite.config.ts": "4ac1d0d5c179e955defabca00e63e1ba1bd14334f43123ae121c93d35df82cdd",
+    "frontend/src/components/DriverLobby.vue": "dd15e0142fc663d59922d748564d7f24e470052e34dd7c694d5e90b652e21c8f",
+    "backend/scripts/seed_acceptance_demo.py": "98e0134e0aa48030e9a6d7f6da4b786c84d4d61e6189073b94c074f7f525b5f5",
+    "backend/scripts/local_integration.py": "291af1ba15abf8718dacc049281fb2ec8b362e29c69425454580b7008f62b221",
+    "frontend/tests/acceptance-integration.mjs": "262155984c80a8b47e029ffe292108d6e9025a24308410501bd8d8e90aab6ed2",
+    "frontend/tests/run-acceptance-integration.mjs": "c866eae952f4687a0ae55921e7f304da8da9816c1d1d10fcef11e5fd7dcb6cfc"
+  }
+}

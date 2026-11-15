@@ -1,0 +1,108 @@
+{
+  "successful": false,
+  "tests_run": 2,
+  "failures": 2,
+  "errors": 0,
+  "metadata": {
+    "database": "ntou_acceptance_catalog_20261115_cb8502e062",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "de174612df30910c52d18ee61aea66fa5bbefa709c32256721de879a0fdae1bd",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38",
+      "tests/test_catalog_validation_mysql.py": "a55b9aa7032494b403c559de446af027a0610a6d0101bc3f0eacb7caa0f6b08a"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "evidence": [
+    {
+      "case": "test_restaurant_response_survives_delete_after_commit",
+      "responses": [
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 500,
+          "body": null
+        },
+        {
+          "path": "/api/delete_restaurant",
+          "status": 200,
+          "body": {
+            "message": "刪除成功"
+          }
+        }
+      ],
+      "committed_before_concurrent_delete": [
+        {
+          "restaurant_id": 1,
+          "restaurant_name": "刪除競爭餐廳e578a7462209",
+          "restaurant_address": "合成測試地址"
+        }
+      ],
+      "counts_before": {
+        "restaurants": 0,
+        "meals": 0
+      },
+      "counts_after": {
+        "restaurants": 0,
+        "meals": 0
+      },
+      "scheduling_hook": "delete API request after create commit, before response serialization"
+    },
+    {
+      "case": "test_meal_response_survives_delete_after_commit",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 500,
+          "body": null
+        },
+        {
+          "path": "/api/delete_meal",
+          "status": 200,
+          "body": {
+            "message": "刪除成功"
+          }
+        }
+      ],
+      "committed_before_concurrent_delete": [
+        {
+          "meal_id": 1,
+          "meal_name": "刪除競爭餐點046857d3acef",
+          "restaurant_id": 2,
+          "price": 80
+        }
+      ],
+      "counts_before": {
+        "restaurants": 1,
+        "meals": 0
+      },
+      "counts_after": {
+        "restaurants": 1,
+        "meals": 0
+      },
+      "scheduling_hook": "delete API request after create commit, before response serialization"
+    }
+  ]
+}

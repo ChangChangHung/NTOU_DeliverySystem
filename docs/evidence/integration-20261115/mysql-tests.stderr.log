@@ -1,0 +1,155 @@
+test_acceptance_keeps_other_buyer_and_other_timestamp_orders_unchanged (__main__.OrderAcceptanceMySQLTests.test_acceptance_keeps_other_buyer_and_other_timestamp_orders_unchanged) ... ok
+test_failed_order_commit_returns_json_and_leaves_no_partial_order (__main__.OrderAcceptanceMySQLTests.test_failed_order_commit_returns_json_and_leaves_no_partial_order) ... 錯誤類型：RuntimeError
+錯誤訊息：synthetic order commit failure after INSERT
+Traceback (most recent call last):
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/server.py", line 638, in add_new_order
+    db.session.commit()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1167, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1171, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py", line 1232, in _execute_mock_call
+    result = effect(*args, **kwargs)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/tests/test_order_acceptance_mysql.py", line 326, in fail_commit_after_flush
+    raise RuntimeError("synthetic order commit failure after INSERT")
+RuntimeError: synthetic order commit failure after INSERT
+=====================================
+ok
+test_invalid_payloads_return_400_without_changes (__main__.OrderAcceptanceMySQLTests.test_invalid_payloads_return_400_without_changes) ... ok
+test_missing_delivery_rejects_without_updating_any_meal (__main__.OrderAcceptanceMySQLTests.test_missing_delivery_rejects_without_updating_any_meal) ... ok
+test_multi_meal_acceptance_is_committed_and_readable_after_engine_disposal (__main__.OrderAcceptanceMySQLTests.test_multi_meal_acceptance_is_committed_and_readable_after_engine_disposal) ... ok
+test_non_pending_and_mixed_state_orders_reject_as_a_whole (__main__.OrderAcceptanceMySQLTests.test_non_pending_and_mixed_state_orders_reject_as_a_whole) ... ok
+test_nonexistent_courier_and_order_return_404_without_changes (__main__.OrderAcceptanceMySQLTests.test_nonexistent_courier_and_order_return_404_without_changes) ... ok
+test_other_courier_assignment_is_not_overwritten (__main__.OrderAcceptanceMySQLTests.test_other_courier_assignment_is_not_overwritten) ... ok
+test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries (__main__.OrderAcceptanceMySQLTests.test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries) ... ok
+test_same_courier_cannot_accept_twice (__main__.OrderAcceptanceMySQLTests.test_same_courier_cannot_accept_twice) ... ok
+test_sql_failure_rolls_back_updates_in_both_tables (__main__.OrderAcceptanceMySQLTests.test_sql_failure_rolls_back_updates_in_both_tables) ... 錯誤類型：RuntimeError
+錯誤訊息：synthetic acceptance failure after both tables were updated
+Traceback (most recent call last):
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/server.py", line 1131, in process_order
+    db.session.commit()
+    ~~~~~~~~~~~~~~~~~^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/scoping.py", line 611, in commit
+    return self._proxied.commit()
+           ~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 2177, in commit
+    trans.commit(_to_root=True)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^
+  File "<sqlalchemy generated _go() wrapper for sqlalchemy.orm.session.SessionTransaction.commit>", line 2, in commit
+    return target(fn, self, _to_root=_to_root)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1412, in commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<sqlalchemy generated _go() wrapper for sqlalchemy.orm.session.SessionTransaction._prepare_impl>", line 2, in _prepare_impl
+    return target(fn, self)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/state_changes.py", line 137, in _go
+    ret_value = fn(self, *arg, **kw)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 1386, in _prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4626, in flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "<sqlalchemy generated warned() wrapper for sqlalchemy.orm.session.Session._flush>", line 2, in _flush
+    return target(fn, self, objects=objects)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/util/deprecations.py", line 281, in warned
+    return fn(*args, **kwargs)  # type: ignore[no-any-return]
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4769, in _flush
+    with util.safe_reraise():
+         ~~~~~~~~~~~~~~~~~^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/util/langhelpers.py", line 166, in __exit__
+    raise exc_value.with_traceback(exc_tb)
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/session.py", line 4730, in _flush
+    flush_context.execute()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 467, in execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/unitofwork.py", line 643, in execute
+    util.preloaded.orm_persistence._save_obj(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_mapper_hierarchy(self.mapper, False, False),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 84, in _save_obj
+    _emit_update_statements(
+    ~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        update,
+        ^^^^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/orm/persistence.py", line 929, in _emit_update_statements
+    c = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1494, in execute
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/sql/elements.py", line 534, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self, distilled_params, execution_options
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1714, in _execute_clauseelement
+    ret = self._execute_context(
+        dialect,
+    ...<9 lines>...
+        param_dict=param_dict,
+    )
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1868, in _execute_context
+    return self._exec_single_context(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        dialect, context, statement, parameters
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1996, in _exec_single_context
+    self._handle_dbapi_exception(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        e, str_statement, effective_parameters, cursor, context
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 2354, in _handle_dbapi_exception
+    raise exc_info[1].with_traceback(exc_info[2])
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+    self.dispatch.after_cursor_execute(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        self,
+        ^^^^^
+    ...<4 lines>...
+        context.executemany,
+        ^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/.venv/lib/python3.13/site-packages/sqlalchemy/event/attr.py", line 514, in __call__
+    fn(*args, **kw)
+    ~~^^^^^^^^^^^^^
+  File "/Users/luyifu/Desktop/海大/軟體工程/NTOU_DeliverySystem/backend/tests/test_order_acceptance_mysql.py", line 243, in fail_after_real_update
+    raise RuntimeError("synthetic acceptance failure after both tables were updated")
+RuntimeError: synthetic acceptance failure after both tables were updated
+ok
+test_two_couriers_compete_on_mysql_row_locks_ten_rounds (__main__.OrderAcceptanceMySQLTests.test_two_couriers_compete_on_mysql_row_locks_ten_rounds) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 3.276s
+
+OK

@@ -1,0 +1,597 @@
+{
+  "metadata": {
+    "database": "ntou_acceptance_demo_20261115_d977c29aad",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "16d40201406e96b7b79ee01b241d41c961b87bc28a002d7ccca5d43e00ba2176",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "synthetic_fixture_description": "All users, meals, addresses and orders are synthetic local demo data.",
+  "authentication_note": "The demo uses explicit user IDs; this does not implement or verify login/authorization.",
+  "demo_courier_ids": [
+    2,
+    3
+  ],
+  "frontend_environment": {
+    "VITE_DELIVERER_ID": "2"
+  },
+  "expected_initial_visible_orders": 2,
+  "order_timestamp_source": "Actual add_new_order API responses; no fixed or randomized demo dates.",
+  "fixtures": [
+    {
+      "scenario": "ready_multi_meal",
+      "buyer_id": 1,
+      "deliverer_ids": [
+        2,
+        3
+      ],
+      "meal_ids": [
+        1,
+        2
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        1,
+        2
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 1,
+                  "meal_id": 1,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 1,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 1,
+                  "meal_id": 2,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 2,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 1,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "PENDING",
+          "PENDING"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "ready_single_meal",
+      "buyer_id": 4,
+      "deliverer_ids": [
+        5,
+        6
+      ],
+      "meal_ids": [
+        3
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        3
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 4,
+                  "meal_id": 3,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 3,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 4,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "PENDING"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_missing_delivery",
+      "buyer_id": 7,
+      "deliverer_ids": [
+        8,
+        9
+      ],
+      "meal_ids": [
+        4,
+        5
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        4,
+        5
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 7,
+                  "meal_id": 4,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 4,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 7,
+                  "meal_id": 5,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 5,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          }
+        ],
+        "fixture_states": [
+          "PENDING",
+          "PENDING"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_already_accepted",
+      "buyer_id": 10,
+      "deliverer_ids": [
+        11,
+        12
+      ],
+      "meal_ids": [
+        6,
+        7
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        6,
+        7
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 10,
+                  "meal_id": 6,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 6,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 10,
+                  "meal_id": 7,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 7,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 10,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_cancelled",
+      "buyer_id": 13,
+      "deliverer_ids": [
+        14,
+        15
+      ],
+      "meal_ids": [
+        8,
+        9
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        8,
+        9
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 13,
+                  "meal_id": 8,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 8,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 13,
+                  "meal_id": 9,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 9,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 13,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "CANCELLED",
+          "CANCELLED"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_completed",
+      "buyer_id": 16,
+      "deliverer_ids": [
+        17,
+        18
+      ],
+      "meal_ids": [
+        10,
+        11
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        10,
+        11
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 16,
+                  "meal_id": 10,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 10,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 16,
+                  "meal_id": 11,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 11,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 16,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "COMPLETED",
+          "COMPLETED"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_in_cart",
+      "buyer_id": 19,
+      "deliverer_ids": [
+        20,
+        21
+      ],
+      "meal_ids": [
+        12,
+        13
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        12,
+        13
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 19,
+                  "meal_id": 12,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 12,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 19,
+                  "meal_id": 13,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 13,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 19,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "IN_CART",
+          "IN_CART"
+        ],
+        "database_identity_verified": true
+      }
+    },
+    {
+      "scenario": "hidden_mixed_cart",
+      "buyer_id": 22,
+      "deliverer_ids": [
+        23,
+        24
+      ],
+      "meal_ids": [
+        14,
+        15
+      ],
+      "timestamp": "2026-11-15 21:59:37",
+      "order_ids": [
+        14,
+        15
+      ],
+      "creation_evidence": {
+        "timestamp_source": "add_new_order API response; server datetime.now()",
+        "request_started": "2026-11-15 21:59:37",
+        "request_finished": "2026-11-15 21:59:37",
+        "responses": [
+          {
+            "path": "/api/add_new_order",
+            "status": 201,
+            "body": {
+              "message": "訂單建立成功",
+              "orders": [
+                {
+                  "buyer_id": 22,
+                  "meal_id": 14,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 14,
+                  "order_state": "pending",
+                  "quantity": 1,
+                  "timestamp": "2026-11-15 21:59:37"
+                },
+                {
+                  "buyer_id": 22,
+                  "meal_id": 15,
+                  "note": "接單展示用測試餐點",
+                  "order_id": 15,
+                  "order_state": "pending",
+                  "quantity": 2,
+                  "timestamp": "2026-11-15 21:59:37"
+                }
+              ],
+              "success": true,
+              "timestamp": "2026-11-15 21:59:37"
+            }
+          },
+          {
+            "path": "/api/add_new_delivery",
+            "status": 201,
+            "body": {
+              "delivery": {
+                "buyer_id": 22,
+                "deliverer_id": null,
+                "pickup_address": "海大測試交付點",
+                "timestamp": "2026-11-15 21:59:37"
+              },
+              "message": "外送需求建立成功",
+              "success": true
+            }
+          }
+        ],
+        "fixture_states": [
+          "PENDING",
+          "IN_CART"
+        ],
+        "database_identity_verified": true
+      }
+    }
+  ]
+}
