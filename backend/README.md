@@ -8,7 +8,7 @@ tags: [資料庫]
 
 ### 說明
 透過對網址發送HTTP請求、JSON物件操作資料庫。
-臨時網址: `https://inspection-driving-jul-built.trycloudflare.com`
+臨時網址: `https://meaning-neutral-eliminate-mentor.trycloudflare.com`
 cloudflare 臨時tunnel，可能會變更。
 
 - 所有API都是在此連結後附加對應的路徑: `https://臨時網域名稱/api`
@@ -78,6 +78,47 @@ cloudflare 臨時tunnel，可能會變更。
 }
 ```
 - 伺服器回傳JSON，顯示成功新增的餐點資料。
+
+### -- 新增餐廳評論
+- POST
+- 路徑: `/api/new_restaurants_reviews`
+- 傳送到伺服器的JSON必須包含:
+```JSON=
+{
+    "restaurants_id":"餐廳id",
+    "user_id":"使用者id",
+    "stars":"星數(整數1~5)",
+    "comment":"評論(字串)"
+}
+```
+- 伺服器回傳JSON，顯示成功新增的餐點資料。
+
+### -- 瀏覽所有餐廳評論
+- GET
+- 路徑: `/api/view_all_restaurants_reviews`
+- 回傳JSON範例:
+```JSON=
+{
+    "success": true,
+    "message": "取得所有餐廳評論成功",
+    "reviews": [
+        {
+            "restaurants_id": 1,
+            "user_id": 2,
+            "timestamp": "2026-11-13T12:30:00",
+            "stars": 5,
+            "comment": "餐點很好吃，服務也很好！"
+        },
+        {
+            "restaurants_id": 1,
+            "user_id": 3,
+            "timestamp": "2026-11-13T13:00:00",
+            "stars": 4,
+            "comment": "整體不錯，價格稍微偏高。"
+        }
+    ]
+}
+```
 
 ### -- 新增餐點
 - POST

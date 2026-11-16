@@ -8,7 +8,6 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 from enum import Enum
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 import traceback
 import utils
 
@@ -147,6 +146,28 @@ class Delivery(db.Model):
         "Users",
         foreign_keys=[deliverer_id],
         backref="accepted_deliveries"
+    )
+
+#餐廳評論
+class RestaurantReviews(db.Model):
+    __tablename__ = "restaurant_reviews"
+
+    restaurants_id = db.Column(db.Integer,db.ForeignKey("restaurants.restaurant_id"),primary_key=True,nullable=False)
+    user_id = db.Column(db.Integer,db.ForeignKey("users.user_id"),primary_key=True,nullable=False)
+    timestamp = db.Column(db.DateTime,primary_key=True,nullable=False)
+    stars = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=True)
+
+    # 關聯至 Restaurants
+    restaurant = db.relationship(
+        "Restaurants",
+        backref="reviews"
+    )
+
+    # 關聯至 Users
+    user = db.relationship(
+        "Users",
+        backref="restaurant_reviews"
     )
 
 # 測試後端是否正常運作
@@ -1355,6 +1376,145 @@ def abandon_order():
         db.session.rollback()
         return utils.general_exception_log(e, "放棄承接訂單失敗")
 
+# 新增餐廳評論
+@app.post("/api/new_restaurants_reviews")
+def new_restaurants_reviews():
+
+    data = request.get_json(silent=True)
+    # 確認收到的是 JSON 物件
+    data, error = utils.get_json_object()
+    if error:
+        return error
+
+    # 確認必要欄位是否存在
+    required_fields = ["restaurants_id", "user_id", "stars"]
+
+    if any(field not in data for field in required_fields):
+        return jsonify({
+            "success": False,
+            "message": "缺少必要欄位（restaurants_id, user_id, stars）"
+        }), 400
+
+    # 驗證 restaurants_id
+    restaurants_id, notPositiveNumErr = utils.validate_positive_int(restaurants_id,"restaurants_id")
+    if notPositiveNumErr:
+        return notPositiveNumErr
+
+    # 驗證 user_id
+    user_id, notPositiveNumErr = utils.validate_positive_int(user_id,"user_id")
+    if notPositiveNumErr:
+        return notPositiveNumErr
+
+    # 驗證 stars
+    try:
+        stars = int(data["stars"])
+
+        if isinstance(data["stars"], bool) or stars < 1 or stars > 5:
+            raise ValueError
+
+    except (ValueError, TypeError):
+        return jsonify({
+            "success": False,
+            "message": "stars 必須是 1～5 的整數"
+        }), 400
+
+    # 驗證 comment
+    comment = data.get("comment")
+
+    if comment is not None and not isinstance(comment, str):
+        return jsonify({
+            "success": False,
+            "message": "comment 必須是字串"
+        }), 400
+
+    try:
+        # 確認餐廳是否存在
+        restaurant = db.session.get(Restaurants, restaurants_id)
+
+        if restaurant is None:
+            return jsonify({
+                "success": False,
+                "message": "找不到指定的餐廳"
+            }), 404
+
+        # 確認使用者是否存在
+        user = db.session.get(Users, user_id)
+
+        if user is None:
+            return jsonify({
+                "success": False,
+                "message": "找不到指定的使用者"
+            }), 404
+
+        # 建立評論
+        timestamp = datetime.now()
+
+        new_review = RestaurantReviews(
+            restaurants_id=restaurants_id,
+            user_id=user_id,
+            timestamp=timestamp,
+            stars=stars,
+            comment=comment
+        )
+
+        db.session.add(new_review)
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "新增餐廳評論成功",
+            "review": {
+                "restaurants_id": new_review.restaurants_id,
+                "user_id": new_review.user_id,
+                "timestamp": new_review.timestamp.strftime("%Y-%m-%d %H:%M:%S"),
+                "stars": new_review.stars,
+                "comment": new_review.comment
+            }
+        }), 201
+
+    except IntegrityError:
+        db.session.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": "新增評論失敗，可能存在重複的評論主鍵"
+        }), 409
+
+    except Exception as e:
+        db.session.rollback()
+        return utils.general_exception_log(e, "新增餐廳評論失敗")
+
+# 瀏覽所有餐廳評論
+@app.get("/api/view_all_restaurants_reviews")
+def view_all_restaurants_reviews():
+
+    try:
+        # 查詢所有餐廳評論
+        restaurants_reviews = RestaurantReviews.query.all()
+
+        reviews_list = []
+
+        for review in restaurants_reviews:
+            reviews_list.append({
+                "restaurants_id": review.restaurants_id,
+                "user_id": review.user_id,
+                "timestamp": review.timestamp.isoformat(),
+                "stars": review.stars,
+                "comment": review.comment
+            })
+
+        return jsonify({
+            "success": True,
+            "message": "取得所有餐廳評論成功",
+            "reviews": reviews_list
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "取得餐廳評論時發生錯誤",
+            "error": str(e)
+        }), 500
 
 if __name__ == "__main__":
     with app.app_context():
