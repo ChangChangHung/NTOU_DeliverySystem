@@ -596,7 +596,7 @@ def add_new_order():
         }), 404
 
     # 取得目前時間，同一次新增的訂單共用這個時間
-    timestamp = datetime.now()
+    timestamp = datetime.now().replace(microsecond=0)
 
     new_orders = []
 
@@ -1090,7 +1090,7 @@ def process_order():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            )
+            ).with_for_update()
         ).scalars().all()
 
         if not orders:
