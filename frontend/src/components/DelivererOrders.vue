@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 interface Meal {
   meal_id: number
@@ -43,8 +43,8 @@ interface MyOrder {
   total: number
 }
 
-// 登入還沒做好，先固定用這個外送員帳號
-const DELIVERER_ID = 1
+// 登入還沒做好，跟接單大廳一樣用 VITE_DELIVERER_ID 設定外送員帳號，沒設定就用 1
+const DELIVERER_ID = Number(import.meta.env.VITE_DELIVERER_ID ?? '1')
 
 const stateText: Record<string, string> = {
   in_cart: '購物車中',
@@ -168,21 +168,33 @@ async function changeOrder(order: MyOrder, url: string, question: string) {
   await loadOrders()
 }
 
-onMounted(loadOrders)
+// 每 15 秒自動重新整理一次，才看得到對方改過的狀態
+let timer = 0
+
+onMounted(() => {
+  loadOrders()
+  timer = window.setInterval(() => {
+    if (!loading.value) loadOrders()
+  }, 15000)
+})
+
+onUnmounted(() => window.clearInterval(timer))
 </script>
 
 <template>
   <div class="page">
     <h1>我的外送單</h1>
+    <p class="account">示範帳號：外送員 #{{ DELIVERER_ID }}（尚未串接登入）</p>
+    <p><a href="/driver.html">← 回接單大廳</a></p>
 
     <div class="toolbar">
       <span>共 {{ orders.length }} 筆</span>
-      <button @click="loadOrders">重新整理</button>
+      <button :disabled="loading" @click="loadOrders">重新整理</button>
     </div>
 
     <p v-if="notice" class="notice">{{ notice }}</p>
 
-    <div v-if="loading" class="message">載入中……</div>
+    <div v-if="loading && orders.length === 0" class="message">載入中……</div>
 
     <div v-else-if="error" class="message">{{ error }}</div>
 
@@ -244,6 +256,15 @@ onMounted(loadOrders)
 
 h1 {
   text-align: center;
+}
+
+.account {
+  text-align: center;
+  color: #888;
+}
+
+a {
+  color: #333;
 }
 
 .toolbar {

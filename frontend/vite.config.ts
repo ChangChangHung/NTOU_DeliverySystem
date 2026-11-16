@@ -10,6 +10,8 @@ export default defineConfig({
       input: {
         main: fileURLToPath(new URL('./index.html', import.meta.url)),
         driver: fileURLToPath(new URL('./driver.html', import.meta.url)),
+        delivererOrders: fileURLToPath(new URL('./deliverer-orders.html', import.meta.url)),
+        buyerOrders: fileURLToPath(new URL('./buyer-orders.html', import.meta.url)),
       },
     },
   },
