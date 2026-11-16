@@ -1,0 +1,33 @@
+{
+  "video_duration_seconds": 88.32,
+  "recording_run": "live-demo-20261115-220125-b7e387",
+  "rehearsal_passed": true,
+  "rehearsal_run": "live-demo-20261115-220018-6ff54b",
+  "local_changes_not_pushed": true,
+  "source_sha256": {
+    "frontend/src/components/DriverLobby.vue": "dd15e0142fc663d59922d748564d7f24e470052e34dd7c694d5e90b652e21c8f",
+    "frontend/tests/record-acceptance-demo.mjs": "0d8c251d209be61b96c277bd493b444070231fe283fab3292e793420566a5c70",
+    "backend/scripts/local_demo.py": "06fdf8e54415875f246a06fa2cc9a50d94ef1f26dc5afa381bbe214369d06623",
+    "backend/scripts/demo_dashboard.html": "3f44b99e4b4d1cc01229527926aeae5e5df892ce64495bb4d23138727f5929a6",
+    "backend/scripts/seed_acceptance_demo.py": "98e0134e0aa48030e9a6d7f6da4b786c84d4d61e6189073b94c074f7f525b5f5",
+    "backend/server.py": "16d40201406e96b7b79ee01b241d41c961b87bc28a002d7ccca5d43e00ba2176"
+  },
+  "evidence_sha256": {
+    "09-offline-error.jpg": "7864f0e8828553706665abc5eef07873d88aa5cddd116a5ea4a596ed17be2fe6",
+    "01-two-couriers.jpg": "883d8a545dd9ed383a5b1af9493adb13c93139c628c7e028b5bd05fbb0b4fce1",
+    "04-real-409.jpg": "e2b65d05f3b68091544d7e3b3f96aee788b3e395d5aea857baa07891bbe3caa3",
+    "接單流程與例外情況.mp4": "520700ff781201faf2ba07f0463b0565fcbb8e7367512befdd63c1027c4a1105",
+    "database-database-before.json": "2864258de5ee62de47dea7a738f9bf5e04f3a4591e9c1d82950af2260d5f33fe",
+    "02-database-before.jpg": "8fffdb5e72c74b3f8eff36147b1d7c9ba217e8ddfdd42945811e6ec1395042b7",
+    "08-sql.jpg": "71059aea7b80256f3851876e36015008e97e619255dd2740e50e3d4448bfe067",
+    "demo-events.json": "a10660d670e7400efcd029ce981e282f9497fc786003cef64e0cd0d8f938130f",
+    "database-database-after.json": "b2d77fb2df55af1a54ad30a5fdd6ea4c79038b2815f6256f16780e075770cfed",
+    "database-connection-restored.json": "ed771c5845ab78f9119938f03aaf763c8916ba402a6d6ddcc4b8cc660a22d0ca",
+    "06-both-own-orders.jpg": "978ce778224de3cde7468fa81f4e20b7d113487237a17299615303a858007e81",
+    "07-database-after.jpg": "56eb92dfa337799acb21be8153344441228547a68ff0b005141a4157f169d6b0",
+    "10-recovered.jpg": "d36a8731c69304aff78c27ab8605eded858e331d87d56a622f1f25a2ef95467e",
+    "05-courier-3-own-order.jpg": "f239c8ad9a5684a63dfa3ba0a9531f379b459b8ca914b91147074767c1bead97",
+    "03-courier-2-own-order.jpg": "3b0af77106be2ef956417415d3007afa06f2e32eec9afa677224e5a4027557d5",
+    "seed.json": "35bfe3e5748fdba3bb9e459f454de99b7f2c3b8e7e9eb2a686e90fd5da4fac13"
+  }
+}

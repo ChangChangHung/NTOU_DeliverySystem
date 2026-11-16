@@ -1,0 +1,31 @@
+{
+  "queried_at": "2026-11-15T22:02:02+08:00",
+  "database": "ntou_acceptance_demo_20261115_9d6a752a24",
+  "sql": "SELECT o.buyer_id,o.timestamp,o.order_id,o.meal_id,o.order_state,d.deliverer_id FROM orders o JOIN delivery d ON o.buyer_id=d.buyer_id AND o.timestamp=d.timestamp WHERE (o.buyer_id=1 AND o.timestamp='2026-11-15 22:01:25') OR (o.buyer_id=4 AND o.timestamp='2026-11-15 22:01:25') ORDER BY o.buyer_id,o.timestamp,o.order_id",
+  "rows": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:01:25",
+      "order_id": 1,
+      "meal_id": 1,
+      "order_state": "PENDING",
+      "deliverer_id": null
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:01:25",
+      "order_id": 2,
+      "meal_id": 2,
+      "order_state": "PENDING",
+      "deliverer_id": null
+    },
+    {
+      "buyer_id": 4,
+      "timestamp": "2026-11-15 22:01:25",
+      "order_id": 3,
+      "meal_id": 3,
+      "order_state": "PENDING",
+      "deliverer_id": null
+    }
+  ]
+}

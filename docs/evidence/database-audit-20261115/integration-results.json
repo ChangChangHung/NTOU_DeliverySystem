@@ -1,0 +1,232 @@
+{
+  "run_id": "20261115T142444Z-99f225",
+  "completed_at": "2026-11-15T14:24:54.045960+00:00",
+  "passed": true,
+  "browser_cases": {
+    "passed": 8,
+    "total": 8
+  },
+  "browser_response_audit": {
+    "passed": true,
+    "total": 13,
+    "passed_cases": 13
+  },
+  "metadata": {
+    "database": "ntou_acceptance_demo_20261115_5cd15dcd7d",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "d204d204cbcf1f5eaa2d7e6f353a7e6e9a4dc6c67b9db3304870d78d2925af1f",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "playwright_version": "1.66.0-alpha-1794252756000",
+  "database_checks": [
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:47",
+        "label": "delayed-delivery",
+        "order_ids": [
+          16,
+          17
+        ],
+        "expected_deliverer_id": 2,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 16,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 17,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:48",
+        "label": "courier-b-own-order",
+        "order_ids": [
+          18,
+          19
+        ],
+        "expected_deliverer_id": 3,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 18,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 19,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 3
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:49",
+        "label": "two-pages-compete",
+        "order_ids": [
+          20,
+          21
+        ],
+        "expected_deliverer_id": 3,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 20,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 21,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 3
+      },
+      "passed": true
+    },
+    {
+      "order": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:24:50",
+        "label": "lost-response",
+        "order_ids": [
+          22,
+          23
+        ],
+        "expected_deliverer_id": 2,
+        "expected_states": [
+          "PROCESSING",
+          "PROCESSING"
+        ],
+        "expected_items": [
+          {
+            "meal_id": 1,
+            "meal_name": "測試餐點 1",
+            "quantity": 1
+          },
+          {
+            "meal_id": 2,
+            "meal_name": "測試餐點 2",
+            "quantity": 2
+          }
+        ]
+      },
+      "database": {
+        "orders": [
+          {
+            "order_id": 22,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 23,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "passed": true
+    }
+  ],
+  "source_sha256": {
+    "backend/server.py": "d204d204cbcf1f5eaa2d7e6f353a7e6e9a4dc6c67b9db3304870d78d2925af1f",
+    "backend/utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+    "frontend/vite.config.ts": "4ac1d0d5c179e955defabca00e63e1ba1bd14334f43123ae121c93d35df82cdd",
+    "frontend/src/components/DriverLobby.vue": "7f9f9e651a2327affd6550af02e92e18271319998e368727002e10ee0443dbd6",
+    "backend/scripts/seed_acceptance_demo.py": "98e0134e0aa48030e9a6d7f6da4b786c84d4d61e6189073b94c074f7f525b5f5",
+    "backend/scripts/local_integration.py": "f27d998475e6f1b057e4edecfdb14927e1052eb7ea14c190dc1c1c1bc68a7bd5",
+    "frontend/tests/acceptance-integration.mjs": "262155984c80a8b47e029ffe292108d6e9025a24308410501bd8d8e90aab6ed2",
+    "frontend/tests/run-acceptance-integration.mjs": "e86cb5485742947384be23aee133a42330b13cb27da11640e7dca629bd9a50bd",
+    "frontend/tests/acceptance-audit.mjs": "ee01ee460214e4df5f5ea3bbc5f1f182b800039f65afbb27ba529c5287a8447a"
+  }
+}

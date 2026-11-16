@@ -1,0 +1,50 @@
+{
+  "integration-results.json": {
+    "sha256": "fb3fc72f76bec8c9284280b76189f785c34ba77017ee38b160c6c58e9afbd5d0",
+    "bytes": 4184
+  },
+  "browser-results.json": {
+    "sha256": "8e78ad5e718f1e31a6193488fb72ee1220a73117c9b82d35807ccc177b6da724",
+    "bytes": 19736
+  },
+  "seed.json": {
+    "sha256": "ce1398949c757058d466a2f662a1e68fc69887bcf9ffbd7d4effef020bef95a8",
+    "bytes": 3689
+  },
+  "compete-0.png": {
+    "sha256": "0a781159039ebe8136219e464a9d929743c860691d22be2611d730cfdd95d27d",
+    "bytes": 81289
+  },
+  "compete-1.png": {
+    "sha256": "3c645f0025cdf9e08d2d480ec975d1322c24d2eb73ae223b48f6d95796950862",
+    "bytes": 78650
+  },
+  "delivery-created.png": {
+    "sha256": "9ab0c2d94c4fe0e6fc4ea798ac0e4dbfecde9992ab8331659480b9adc36ed667",
+    "bytes": 117194
+  },
+  "stale-second-courier.png": {
+    "sha256": "7a339e20bdfcf90adb5ac52f042213288f108cfaef7c4191ae396df2b2360877",
+    "bytes": 81301
+  },
+  "response-lost.png": {
+    "sha256": "a99f977abee8cb927785502d91a8120425393eaca1908abd6a7b723ce57bae9b",
+    "bytes": 87977
+  },
+  "mysql-results.json": {
+    "sha256": "6836b96498a53ae214441c80455795b96dedbc0aa25622c8f3ad9c4bb288e83f",
+    "bytes": 58760
+  },
+  "mysql-tests.stderr.log": {
+    "sha256": "ff31fe1903fb6ecad63aa93a0a32d5774749155caae38822d47fac0e3da25102",
+    "bytes": 10609
+  },
+  "_checks": {
+    "mysql_tests": 12,
+    "browser_tests": 7,
+    "independent_sql_checks": 3,
+    "typecheck_build_exit_code": 0,
+    "source_hashes_matched": true,
+    "private_password_absent": true
+  }
+}

@@ -1,0 +1,2283 @@
+{
+  "suite": "order_acceptance_mysql",
+  "successful": true,
+  "tests_run": 12,
+  "failures": 0,
+  "errors": 0,
+  "metadata": {
+    "database": "ntou_acceptance_test_20261115_0c7f85f320",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "16d40201406e96b7b79ee01b241d41c961b87bc28a002d7ccca5d43e00ba2176",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "evidence": [
+    {
+      "case": "test_acceptance_keeps_other_buyer_and_other_timestamp_orders_unchanged",
+      "order_identity": {
+        "buyer_id": 1,
+        "timestamp": "2033-02-03 04:05:06"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 1,
+                "meal_id": 1,
+                "note": null,
+                "order_id": 5,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2033-02-03 04:05:06"
+              },
+              {
+                "buyer_id": 1,
+                "meal_id": 2,
+                "note": null,
+                "order_id": 6,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2033-02-03 04:05:06"
+              }
+            ],
+            "success": true,
+            "timestamp": "2033-02-03 04:05:06"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 1,
+              "deliverer_id": null,
+              "pickup_address": "不同買家的接單聯測地址",
+              "timestamp": "2033-02-03 04:05:06"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 4,
+                "meal_id": 3,
+                "note": null,
+                "order_id": 7,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2033-02-03 04:05:06"
+              },
+              {
+                "buyer_id": 4,
+                "meal_id": 4,
+                "note": null,
+                "order_id": 8,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2033-02-03 04:05:06"
+              }
+            ],
+            "success": true,
+            "timestamp": "2033-02-03 04:05:06"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 4,
+              "deliverer_id": null,
+              "pickup_address": "不同買家的接單聯測地址",
+              "timestamp": "2033-02-03 04:05:06"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 1,
+            "deliverer_id": 2,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 1,
+                "order_id": 5,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 2,
+                "order_id": 6,
+                "order_state": "processing",
+                "quantity": 1
+              }
+            ],
+            "success": true,
+            "timestamp": "2033-02-03 04:05:06"
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 5,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 6,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "unrelated_order": {
+        "identity": {
+          "buyer_id": 4,
+          "timestamp": "2033-02-03 04:05:06"
+        },
+        "before": {
+          "orders": [
+            {
+              "order_id": 7,
+              "state": "PENDING"
+            },
+            {
+              "order_id": 8,
+              "state": "PENDING"
+            }
+          ],
+          "delivery_exists": true,
+          "deliverer_id": null
+        },
+        "after": {
+          "orders": [
+            {
+              "order_id": 7,
+              "state": "PENDING"
+            },
+            {
+              "order_id": 8,
+              "state": "PENDING"
+            }
+          ],
+          "delivery_exists": true,
+          "deliverer_id": null
+        }
+      },
+      "same_buyer_other_order": {
+        "identity": {
+          "buyer_id": 1,
+          "timestamp": "2030-04-06 11:30:46"
+        },
+        "before": {
+          "orders": [
+            {
+              "order_id": 1,
+              "state": "PENDING"
+            },
+            {
+              "order_id": 2,
+              "state": "PENDING"
+            }
+          ],
+          "delivery_exists": true,
+          "deliverer_id": null
+        },
+        "after": {
+          "orders": [
+            {
+              "order_id": 1,
+              "state": "PENDING"
+            },
+            {
+              "order_id": 2,
+              "state": "PENDING"
+            }
+          ],
+          "delivery_exists": true,
+          "deliverer_id": null
+        }
+      },
+      "injected_clock": "2033-02-03 04:05:06"
+    },
+    {
+      "case": "test_failed_order_commit_returns_json_and_leaves_no_partial_order",
+      "order_identity": {
+        "buyer_id": 7,
+        "timestamp": "2034-03-04 05:06:07"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic order commit failure after INSERT",
+            "error_type": "RuntimeError",
+            "message": "建立訂單失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "synthetic_failure_injection": true,
+      "flushed_before_failure": true
+    },
+    {
+      "case": "test_invalid_payloads_return_400_without_changes",
+      "order_identity": {
+        "buyer_id": 10,
+        "timestamp": "2030-06-01 18:45:28"
+      },
+      "responses": [
+        {
+          "status": 400,
+          "body": {
+            "message": "請提供 JSON 物件",
+            "success": false
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "message": "buyer_id 格式錯誤",
+            "success": false
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "message": "buyer_id 必須是正整數",
+            "success": false
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "message": "deliverer_id 格式錯誤",
+            "success": false
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "message": "deliverer_id 必須是正整數",
+            "success": false
+          }
+        },
+        {
+          "status": 400,
+          "body": {
+            "message": "timestamp 格式錯誤，應為 YYYY-MM-DD HH:MM:SS",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 13,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 14,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_missing_delivery_rejects_without_updating_any_meal",
+      "order_identity": {
+        "buyer_id": 16,
+        "timestamp": "2030-01-09 12:58:32"
+      },
+      "responses": [
+        {
+          "status": 404,
+          "body": {
+            "message": "找不到對應的外送紀錄",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 17,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 18,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": false,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_multi_meal_acceptance_is_committed_and_readable_after_engine_disposal",
+      "order_identity": {
+        "buyer_id": 19,
+        "timestamp": "2030-01-17 02:59:40"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "buyer_id": 19,
+            "deliverer_id": 20,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 13,
+                "order_id": 19,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 14,
+                "order_id": 20,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-01-17 02:59:40"
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 19,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 20,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 20
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 25,
+        "timestamp": "2030-07-24 18:24:19"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 23,
+                "order_state": "cancelled"
+              },
+              {
+                "order_id": 24,
+                "order_state": "cancelled"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 23,
+            "state": "CANCELLED"
+          },
+          {
+            "order_id": 24,
+            "state": "CANCELLED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 28,
+        "timestamp": "2030-02-05 22:41:44"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 25,
+                "order_state": "completed"
+              },
+              {
+                "order_id": 26,
+                "order_state": "completed"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 25,
+            "state": "COMPLETED"
+          },
+          {
+            "order_id": 26,
+            "state": "COMPLETED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 31,
+        "timestamp": "2030-02-19 01:18:04"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 27,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 28,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 27,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 28,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 34,
+        "timestamp": "2030-01-23 05:18:25"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 30,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 29,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 30,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 37,
+        "timestamp": "2030-07-28 02:15:41"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 31,
+                "order_state": "in_cart"
+              },
+              {
+                "order_id": 32,
+                "order_state": "in_cart"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 31,
+            "state": "IN_CART"
+          },
+          {
+            "order_id": 32,
+            "state": "IN_CART"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_non_pending_and_mixed_state_orders_reject_as_a_whole",
+      "order_identity": {
+        "buyer_id": 40,
+        "timestamp": "2030-01-10 17:28:29"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 34,
+                "order_state": "in_cart"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 33,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 34,
+            "state": "IN_CART"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_nonexistent_courier_and_order_return_404_without_changes",
+      "order_identity": {
+        "buyer_id": 43,
+        "timestamp": "2030-04-06 07:15:26"
+      },
+      "responses": [
+        {
+          "status": 404,
+          "body": {
+            "message": "deliverer_id 不存在",
+            "success": false
+          }
+        },
+        {
+          "status": 404,
+          "body": {
+            "message": "找不到符合條件的訂單",
+            "success": false
+          }
+        },
+        {
+          "status": 404,
+          "body": {
+            "message": "找不到符合條件的訂單",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 35,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 36,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      }
+    },
+    {
+      "case": "test_other_courier_assignment_is_not_overwritten",
+      "order_identity": {
+        "buyer_id": 46,
+        "timestamp": "2030-06-20 07:11:56"
+      },
+      "responses": [
+        {
+          "status": 409,
+          "body": {
+            "message": "此訂單已由其他外送員承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 37,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 38,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 48
+      }
+    },
+    {
+      "case": "test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries",
+      "order_identity": {
+        "buyer_id": 52,
+        "timestamp": "2032-01-01 12:00:00"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 52,
+                "meal_id": 35,
+                "note": null,
+                "order_id": 43,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2032-01-01 12:00:00"
+              },
+              {
+                "buyer_id": 52,
+                "meal_id": 36,
+                "note": null,
+                "order_id": 44,
+                "order_state": "pending",
+                "quantity": 2,
+                "timestamp": "2032-01-01 12:00:00"
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/process_order",
+          "status": 404,
+          "body": {
+            "message": "找不到對應的外送紀錄",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 52,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "status": 200,
+          "matching_stamps": [
+            {
+              "buyer_id": "52",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 52,
+              "meal_id": 35,
+              "note": null,
+              "order_id": 43,
+              "order_state": "pending",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 52,
+              "meal_id": 36,
+              "note": null,
+              "order_id": 44,
+              "order_state": "pending",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 52,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 52,
+            "deliverer_id": 53,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 35,
+                "order_id": 43,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 36,
+                "order_id": 44,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 52,
+              "meal_id": 35,
+              "note": null,
+              "order_id": 43,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 52,
+              "meal_id": 36,
+              "note": null,
+              "order_id": 44,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 52,
+              "deliverer_id": 53,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 43,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 44,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 53
+      },
+      "before_delivery_created": {
+        "orders": [
+          {
+            "order_id": 43,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 44,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "injected_clock_microsecond": 0
+    },
+    {
+      "case": "test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries",
+      "order_identity": {
+        "buyer_id": 55,
+        "timestamp": "2032-01-01 12:00:00"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 55,
+                "meal_id": 37,
+                "note": null,
+                "order_id": 47,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2032-01-01 12:00:00"
+              },
+              {
+                "buyer_id": 55,
+                "meal_id": 38,
+                "note": null,
+                "order_id": 48,
+                "order_state": "pending",
+                "quantity": 2,
+                "timestamp": "2032-01-01 12:00:00"
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/process_order",
+          "status": 404,
+          "body": {
+            "message": "找不到對應的外送紀錄",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 55,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "status": 200,
+          "matching_stamps": [
+            {
+              "buyer_id": "55",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 55,
+              "meal_id": 37,
+              "note": null,
+              "order_id": 47,
+              "order_state": "pending",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 55,
+              "meal_id": 38,
+              "note": null,
+              "order_id": 48,
+              "order_state": "pending",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 55,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 55,
+            "deliverer_id": 56,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 37,
+                "order_id": 47,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 38,
+                "order_id": 48,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 55,
+              "meal_id": 37,
+              "note": null,
+              "order_id": 47,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 55,
+              "meal_id": 38,
+              "note": null,
+              "order_id": 48,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 55,
+              "deliverer_id": 56,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 47,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 48,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 56
+      },
+      "before_delivery_created": {
+        "orders": [
+          {
+            "order_id": 47,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 48,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "injected_clock_microsecond": 499999
+    },
+    {
+      "case": "test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries",
+      "order_identity": {
+        "buyer_id": 58,
+        "timestamp": "2032-01-01 12:00:00"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 58,
+                "meal_id": 39,
+                "note": null,
+                "order_id": 51,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2032-01-01 12:00:00"
+              },
+              {
+                "buyer_id": 58,
+                "meal_id": 40,
+                "note": null,
+                "order_id": 52,
+                "order_state": "pending",
+                "quantity": 2,
+                "timestamp": "2032-01-01 12:00:00"
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/process_order",
+          "status": 404,
+          "body": {
+            "message": "找不到對應的外送紀錄",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 58,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "status": 200,
+          "matching_stamps": [
+            {
+              "buyer_id": "58",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 58,
+              "meal_id": 39,
+              "note": null,
+              "order_id": 51,
+              "order_state": "pending",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 58,
+              "meal_id": 40,
+              "note": null,
+              "order_id": 52,
+              "order_state": "pending",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 58,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 58,
+            "deliverer_id": 59,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 39,
+                "order_id": 51,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 40,
+                "order_id": 52,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 58,
+              "meal_id": 39,
+              "note": null,
+              "order_id": 51,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 58,
+              "meal_id": 40,
+              "note": null,
+              "order_id": 52,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 58,
+              "deliverer_id": 59,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 51,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 52,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 59
+      },
+      "before_delivery_created": {
+        "orders": [
+          {
+            "order_id": 51,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 52,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "injected_clock_microsecond": 500000
+    },
+    {
+      "case": "test_returned_timestamp_connects_order_delivery_and_acceptance_at_fractional_boundaries",
+      "order_identity": {
+        "buyer_id": 61,
+        "timestamp": "2032-01-01 12:00:00"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 201,
+          "body": {
+            "message": "訂單建立成功",
+            "orders": [
+              {
+                "buyer_id": 61,
+                "meal_id": 41,
+                "note": null,
+                "order_id": 55,
+                "order_state": "pending",
+                "quantity": 1,
+                "timestamp": "2032-01-01 12:00:00"
+              },
+              {
+                "buyer_id": 61,
+                "meal_id": 42,
+                "note": null,
+                "order_id": 56,
+                "order_state": "pending",
+                "quantity": 2,
+                "timestamp": "2032-01-01 12:00:00"
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/process_order",
+          "status": 404,
+          "body": {
+            "message": "找不到對應的外送紀錄",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 61,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "status": 200,
+          "matching_stamps": [
+            {
+              "buyer_id": "61",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 61,
+              "meal_id": 41,
+              "note": null,
+              "order_id": 55,
+              "order_state": "pending",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 61,
+              "meal_id": 42,
+              "note": null,
+              "order_id": 56,
+              "order_state": "pending",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 61,
+              "deliverer_id": null,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 61,
+            "deliverer_id": 62,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 41,
+                "order_id": 55,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 42,
+                "order_id": 56,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2032-01-01 12:00:00"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 61,
+              "meal_id": 41,
+              "note": null,
+              "order_id": 55,
+              "order_state": "processing",
+              "quantity": 1,
+              "timestamp": "2032-01-01 12:00:00"
+            },
+            {
+              "buyer_id": 61,
+              "meal_id": 42,
+              "note": null,
+              "order_id": 56,
+              "order_state": "processing",
+              "quantity": 2,
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        },
+        {
+          "path": "/api/view_delivery",
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 61,
+              "deliverer_id": 62,
+              "pickup_address": "合成時間精度驗收資料",
+              "timestamp": "2032-01-01 12:00:00"
+            }
+          ]
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 55,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 56,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 62
+      },
+      "before_delivery_created": {
+        "orders": [
+          {
+            "order_id": 55,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 56,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "injected_clock_microsecond": 999999
+    },
+    {
+      "case": "test_same_courier_cannot_accept_twice",
+      "order_identity": {
+        "buyer_id": 64,
+        "timestamp": "2030-06-15 06:17:41"
+      },
+      "responses": [
+        {
+          "status": 200,
+          "body": {
+            "buyer_id": 64,
+            "deliverer_id": 65,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 43,
+                "order_id": 57,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 44,
+                "order_id": 58,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-06-15 06:17:41"
+          }
+        },
+        {
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 57,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 58,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 57,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 58,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 65
+      }
+    },
+    {
+      "case": "test_sql_failure_rolls_back_updates_in_both_tables",
+      "order_identity": {
+        "buyer_id": 67,
+        "timestamp": "2030-05-14 06:46:45"
+      },
+      "responses": [
+        {
+          "status": 500,
+          "body": {
+            "error_message": "synthetic acceptance failure after both tables were updated",
+            "error_type": "RuntimeError",
+            "message": "承接訂單失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 59,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 60,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "synthetic_failure_injection": true,
+      "updated_tables_before_failure": [
+        "DELIVERY",
+        "ORDERS"
+      ]
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 70,
+        "timestamp": "2030-05-13 06:03:01"
+      },
+      "responses": [
+        {
+          "courier_id": 71,
+          "status": 200,
+          "body": {
+            "buyer_id": 70,
+            "deliverer_id": 71,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 47,
+                "order_id": 61,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 48,
+                "order_id": 62,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-05-13 06:03:01"
+          }
+        },
+        {
+          "courier_id": 72,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 61,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 62,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 61,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 62,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 71
+      },
+      "round": 1,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 73,
+        "timestamp": "2030-05-08 17:11:44"
+      },
+      "responses": [
+        {
+          "courier_id": 74,
+          "status": 200,
+          "body": {
+            "buyer_id": 73,
+            "deliverer_id": 74,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 49,
+                "order_id": 63,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 50,
+                "order_id": 64,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-05-08 17:11:44"
+          }
+        },
+        {
+          "courier_id": 75,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 63,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 64,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 63,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 64,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 74
+      },
+      "round": 2,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 76,
+        "timestamp": "2030-08-13 03:08:52"
+      },
+      "responses": [
+        {
+          "courier_id": 77,
+          "status": 200,
+          "body": {
+            "buyer_id": 76,
+            "deliverer_id": 77,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 51,
+                "order_id": 65,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 52,
+                "order_id": 66,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-08-13 03:08:52"
+          }
+        },
+        {
+          "courier_id": 78,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 65,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 66,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 65,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 66,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 77
+      },
+      "round": 3,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 79,
+        "timestamp": "2030-08-06 05:40:09"
+      },
+      "responses": [
+        {
+          "courier_id": 80,
+          "status": 200,
+          "body": {
+            "buyer_id": 79,
+            "deliverer_id": 80,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 53,
+                "order_id": 67,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 54,
+                "order_id": 68,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-08-06 05:40:09"
+          }
+        },
+        {
+          "courier_id": 81,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 67,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 68,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 67,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 68,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 80
+      },
+      "round": 4,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 82,
+        "timestamp": "2030-02-19 19:01:28"
+      },
+      "responses": [
+        {
+          "courier_id": 83,
+          "status": 200,
+          "body": {
+            "buyer_id": 82,
+            "deliverer_id": 83,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 55,
+                "order_id": 69,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 56,
+                "order_id": 70,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-02-19 19:01:28"
+          }
+        },
+        {
+          "courier_id": 84,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 69,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 70,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 69,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 70,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 83
+      },
+      "round": 5,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 85,
+        "timestamp": "2030-07-19 16:03:11"
+      },
+      "responses": [
+        {
+          "courier_id": 86,
+          "status": 200,
+          "body": {
+            "buyer_id": 85,
+            "deliverer_id": 86,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 57,
+                "order_id": 71,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 58,
+                "order_id": 72,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-07-19 16:03:11"
+          }
+        },
+        {
+          "courier_id": 87,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 71,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 72,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 71,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 72,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 86
+      },
+      "round": 6,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 88,
+        "timestamp": "2030-05-25 02:50:10"
+      },
+      "responses": [
+        {
+          "courier_id": 89,
+          "status": 200,
+          "body": {
+            "buyer_id": 88,
+            "deliverer_id": 89,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 59,
+                "order_id": 73,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 60,
+                "order_id": 74,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-05-25 02:50:10"
+          }
+        },
+        {
+          "courier_id": 90,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 73,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 74,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 73,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 74,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 89
+      },
+      "round": 7,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 91,
+        "timestamp": "2030-02-18 04:28:37"
+      },
+      "responses": [
+        {
+          "courier_id": 92,
+          "status": 200,
+          "body": {
+            "buyer_id": 91,
+            "deliverer_id": 92,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 61,
+                "order_id": 75,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 62,
+                "order_id": 76,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-02-18 04:28:37"
+          }
+        },
+        {
+          "courier_id": 93,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 75,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 76,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 75,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 76,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 92
+      },
+      "round": 8,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 94,
+        "timestamp": "2030-01-21 11:27:11"
+      },
+      "responses": [
+        {
+          "courier_id": 95,
+          "status": 200,
+          "body": {
+            "buyer_id": 94,
+            "deliverer_id": 95,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 63,
+                "order_id": 77,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 64,
+                "order_id": 78,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-01-21 11:27:11"
+          }
+        },
+        {
+          "courier_id": 96,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 77,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 78,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 77,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 78,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 95
+      },
+      "round": 9,
+      "distinct_mysql_connections": 2
+    },
+    {
+      "case": "test_two_couriers_compete_on_mysql_row_locks_ten_rounds",
+      "order_identity": {
+        "buyer_id": 97,
+        "timestamp": "2030-05-31 10:28:45"
+      },
+      "responses": [
+        {
+          "courier_id": 98,
+          "status": 200,
+          "body": {
+            "buyer_id": 97,
+            "deliverer_id": 98,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 65,
+                "order_id": 79,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 66,
+                "order_id": 80,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-05-31 10:28:45"
+          }
+        },
+        {
+          "courier_id": 99,
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 79,
+                "order_state": "processing"
+              },
+              {
+                "order_id": 80,
+                "order_state": "processing"
+              }
+            ],
+            "message": "訂單無法被承接或已經被承接",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 79,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 80,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 98
+      },
+      "round": 10,
+      "distinct_mysql_connections": 2
+    }
+  ]
+}

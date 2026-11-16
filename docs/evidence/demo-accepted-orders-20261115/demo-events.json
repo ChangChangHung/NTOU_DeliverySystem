@@ -1,0 +1,193 @@
+{
+  "passed": true,
+  "rehearsal": false,
+  "started_at": "2026-11-15T14:01:55.323Z",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "database": "ntou_acceptance_demo_20261115_9d6a752a24",
+  "fixtures": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-15 22:01:25",
+      "order_ids": [
+        1,
+        2
+      ]
+    },
+    {
+      "buyer_id": 4,
+      "timestamp": "2026-11-15 22:01:25",
+      "order_ids": [
+        3
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "intro",
+      "seconds": 0.12,
+      "line1": "我用兩個外送員頁面，測試接單後的結果。",
+      "line2": "左邊是 #2，右邊是 #3；這次先用測試身分，還沒接登入。"
+    },
+    {
+      "name": "database-before",
+      "seconds": 6.66,
+      "line1": "先查一下資料庫，這兩張單都還沒有人接。",
+      "line2": "三筆餐點的狀態都是 PENDING，接單外送員也還是空的。"
+    },
+    {
+      "name": "courier-2-accepts",
+      "seconds": 13.98,
+      "line1": "先讓 #2 接買家 #1 的訂單。",
+      "line2": "這張單有兩種餐點，要一起交給同一位外送員。"
+    },
+    {
+      "name": "courier-2-own-order",
+      "seconds": 18.87,
+      "line1": "接完後，這張單出現在 #2 的「我的已接訂單」。",
+      "line2": "買家、下單時間和兩筆餐點都對得上。"
+    },
+    {
+      "name": "stale-page-conflict",
+      "seconds": 26.11,
+      "line1": "#3 還沒更新頁面，再接同一張單看看。",
+      "line2": "畫面出現紅字，提示這張單已經被接走了。"
+    },
+    {
+      "name": "courier-3-accepts",
+      "seconds": 34.3,
+      "line1": "接著讓 #3 接另一張，買家 #4 的訂單。",
+      "line2": "這次接單成功，會放進 #3 自己的清單。"
+    },
+    {
+      "name": "refresh-own-orders",
+      "seconds": 42.14,
+      "line1": "兩邊都重新整理一次，確認訂單還在。",
+      "line2": "#2 只有買家 #1 的單，#3 只有買家 #4 的單。"
+    },
+    {
+      "name": "database-after",
+      "seconds": 52.38,
+      "line1": "現在從接單頁切到資料庫，再查一次。",
+      "line2": "買家 #1 的兩筆餐點是 #2 接的；買家 #4 的單則是 #3。"
+    },
+    {
+      "name": "actual-sql",
+      "seconds": 60.98,
+      "line1": "三筆餐點都變成 PROCESSING，和兩個接單頁一致。",
+      "line2": "這裡可以展開剛才用的 SQL，查的是同一份 MySQL。"
+    },
+    {
+      "name": "offline-error",
+      "seconds": 68.26,
+      "line1": "再試一個例外：讓 #3 暫時連不上後端。",
+      "line2": "按重新整理後會顯示載入失敗，不會說成「沒有訂單」。"
+    },
+    {
+      "name": "connection-restored",
+      "seconds": 76.35,
+      "line1": "恢復連線，再重新整理。",
+      "line2": "#3 剛接的單又能查到了，資料庫裡的接單紀錄也沒有改變。"
+    },
+    {
+      "name": "end",
+      "seconds": 86.28
+    }
+  ],
+  "requests": [
+    {
+      "seconds": 17.01,
+      "url": "http://127.0.0.1:5180/api/process_order",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "seconds": 26.9,
+      "url": "http://127.0.0.1:5181/api/process_order",
+      "body": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "seconds": 35.05,
+      "url": "http://127.0.0.1:5181/api/process_order",
+      "body": {
+        "buyer_id": "4",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 3
+      }
+    }
+  ],
+  "responses": [
+    {
+      "seconds": 17.03,
+      "url": "http://127.0.0.1:5180/api/process_order",
+      "status": 200,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "seconds": 26.91,
+      "url": "http://127.0.0.1:5181/api/process_order",
+      "status": 409,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "seconds": 35.06,
+      "url": "http://127.0.0.1:5181/api/process_order",
+      "status": 200,
+      "request": {
+        "buyer_id": "4",
+        "timestamp": "2026-11-15 22:01:25",
+        "deliverer_id": 3
+      }
+    }
+  ],
+  "errors": [],
+  "final_database": {
+    "queried_at": "2026-11-15T22:02:49+08:00",
+    "database": "ntou_acceptance_demo_20261115_9d6a752a24",
+    "sql": "SELECT o.buyer_id,o.timestamp,o.order_id,o.meal_id,o.order_state,d.deliverer_id FROM orders o JOIN delivery d ON o.buyer_id=d.buyer_id AND o.timestamp=d.timestamp WHERE (o.buyer_id=1 AND o.timestamp='2026-11-15 22:01:25') OR (o.buyer_id=4 AND o.timestamp='2026-11-15 22:01:25') ORDER BY o.buyer_id,o.timestamp,o.order_id",
+    "rows": [
+      {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:01:25",
+        "order_id": 1,
+        "meal_id": 1,
+        "order_state": "PROCESSING",
+        "deliverer_id": 2
+      },
+      {
+        "buyer_id": 1,
+        "timestamp": "2026-11-15 22:01:25",
+        "order_id": 2,
+        "meal_id": 2,
+        "order_state": "PROCESSING",
+        "deliverer_id": 2
+      },
+      {
+        "buyer_id": 4,
+        "timestamp": "2026-11-15 22:01:25",
+        "order_id": 3,
+        "meal_id": 3,
+        "order_state": "PROCESSING",
+        "deliverer_id": 3
+      }
+    ]
+  },
+  "recording_note": "Both iframe views load the actual courier pages. Only the comparison header, cursor and captions are recording aids. Offline case blocks courier 3 API requests locally."
+}

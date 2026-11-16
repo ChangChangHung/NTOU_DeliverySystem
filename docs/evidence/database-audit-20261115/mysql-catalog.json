@@ -1,0 +1,500 @@
+{
+  "suite": "catalog_validation_mysql",
+  "successful": true,
+  "tests_run": 10,
+  "failures": 0,
+  "errors": 0,
+  "metadata": {
+    "database": "ntou_acceptance_catalog_20261115_10a7e2118a",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "d204d204cbcf1f5eaa2d7e6f353a7e6e9a4dc6c67b9db3304870d78d2925af1f",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38",
+      "tests/test_catalog_validation_mysql.py": "db03e10b8287da4706a8238ef9f140103203caba0502c92bb035d003f43f7827"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "evidence": [
+    {
+      "case": "test_invalid_prices_do_not_insert_and_next_valid_price_succeeds",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "error": "價格超過資料庫可儲存的整數範圍"
+          },
+          "input_price": 2147483648
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "error": "價格超過資料庫可儲存的整數範圍"
+          },
+          "input_price": "2147483648"
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "message": "price 格式錯誤",
+            "success": false
+          },
+          "input_price": true
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "message": "price 格式錯誤",
+            "success": false
+          },
+          "input_price": false
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "message": "price 格式錯誤",
+            "success": false
+          },
+          "input_price": 1.5
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "message": "price 必須是正整數",
+            "success": false
+          },
+          "input_price": 0
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "message": "price 必須是正整數",
+            "success": false
+          },
+          "input_price": -1
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 1,
+            "meal_name": "有效價格合成餐點",
+            "price": 80,
+            "restaurant_id": 1
+          }
+        }
+      ],
+      "counts_before": {
+        "restaurants": 1,
+        "meals": 0
+      },
+      "counts_after": {
+        "restaurants": 1,
+        "meals": 1
+      },
+      "committed_recovery_row": {
+        "meal_id": 1,
+        "meal_name": "有效價格合成餐點",
+        "restaurant_id": 1,
+        "price": 80
+      }
+    },
+    {
+      "case": "test_meal_commit_failure_returns_json_and_rolls_back_insert",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic catalog commit failure after INSERT",
+            "error_type": "RuntimeError",
+            "message": "新增餐點失敗",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 3,
+            "meal_name": "回滾測試餐點",
+            "price": 80,
+            "restaurant_id": 2
+          }
+        }
+      ],
+      "synthetic_failure_injection": true,
+      "flushed_before_failure": true,
+      "counts_before": {
+        "restaurants": 2,
+        "meals": 1
+      },
+      "counts_after_failure": {
+        "restaurants": 2,
+        "meals": 1
+      },
+      "counts_after_recovery": {
+        "restaurants": 2,
+        "meals": 2
+      },
+      "committed_recovery_row": {
+        "meal_id": 3,
+        "meal_name": "回滾測試餐點",
+        "restaurant_id": 2,
+        "price": 80
+      }
+    },
+    {
+      "case": "test_meal_name_limit_accepts_trimmed_chinese",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 4,
+            "meal_name": "飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯",
+            "price": 80,
+            "restaurant_id": 3
+          }
+        }
+      ],
+      "committed_row": {
+        "meal_id": 4,
+        "meal_name": "飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯飯",
+        "restaurant_id": 3,
+        "price": 80
+      },
+      "counts_before": {
+        "restaurants": 3,
+        "meals": 2
+      },
+      "counts_after": {
+        "restaurants": 3,
+        "meals": 3
+      }
+    },
+    {
+      "case": "test_meal_overlong_name_rejects_without_writes_and_recovers",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 400,
+          "body": {
+            "error": "餐點名稱最多 40 個字"
+          }
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 5,
+            "meal_name": "麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵",
+            "price": 80,
+            "restaurant_id": 4
+          }
+        }
+      ],
+      "counts_before": {
+        "restaurants": 4,
+        "meals": 3
+      },
+      "counts_after_rejection": {
+        "restaurants": 4,
+        "meals": 3
+      },
+      "committed_recovery_row": {
+        "meal_id": 5,
+        "meal_name": "麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵麵",
+        "restaurant_id": 4,
+        "price": 80
+      }
+    },
+    {
+      "case": "test_meal_response_survives_delete_after_commit",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 6,
+            "meal_name": "刪除競爭餐點d69e4e213cf9",
+            "price": 80,
+            "restaurant_id": 5
+          }
+        },
+        {
+          "path": "/api/delete_meal",
+          "status": 200,
+          "body": {
+            "message": "刪除成功"
+          }
+        }
+      ],
+      "committed_before_concurrent_delete": [
+        {
+          "meal_id": 6,
+          "meal_name": "刪除競爭餐點d69e4e213cf9",
+          "restaurant_id": 5,
+          "price": 80
+        }
+      ],
+      "counts_before": {
+        "restaurants": 5,
+        "meals": 4
+      },
+      "counts_after": {
+        "restaurants": 5,
+        "meals": 4
+      },
+      "scheduling_hook": "delete API request after create commit, before response serialization"
+    },
+    {
+      "case": "test_price_integer_boundaries_are_persisted_exactly",
+      "responses": [
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 7,
+            "meal_name": "價格界線合成餐點",
+            "price": 1,
+            "restaurant_id": 6
+          }
+        },
+        {
+          "path": "/api/add_new_meal",
+          "status": 201,
+          "body": {
+            "meal_id": 8,
+            "meal_name": "價格界線合成餐點",
+            "price": 2147483647,
+            "restaurant_id": 6
+          }
+        }
+      ],
+      "committed_rows": [
+        {
+          "meal_id": 7,
+          "meal_name": "價格界線合成餐點",
+          "restaurant_id": 6,
+          "price": 1
+        },
+        {
+          "meal_id": 8,
+          "meal_name": "價格界線合成餐點",
+          "restaurant_id": 6,
+          "price": 2147483647
+        }
+      ]
+    },
+    {
+      "case": "test_restaurant_commit_failure_returns_json_and_rolls_back_insert",
+      "responses": [
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic catalog commit failure after INSERT",
+            "error_type": "RuntimeError",
+            "message": "新增餐廳失敗",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 201,
+          "body": {
+            "restaurant_address": "合成測試地址",
+            "restaurant_id": 8,
+            "restaurant_name": "回滾餐廳56f3b1f5519c"
+          }
+        }
+      ],
+      "synthetic_failure_injection": true,
+      "flushed_before_failure": true,
+      "counts_before": {
+        "restaurants": 6,
+        "meals": 6
+      },
+      "counts_after_failure": {
+        "restaurants": 6,
+        "meals": 6
+      },
+      "counts_after_recovery": {
+        "restaurants": 7,
+        "meals": 6
+      },
+      "committed_recovery_row": {
+        "restaurant_id": 8,
+        "restaurant_name": "回滾餐廳56f3b1f5519c",
+        "restaurant_address": "合成測試地址"
+      }
+    },
+    {
+      "case": "test_restaurant_limits_count_trimmed_chinese_characters",
+      "responses": [
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 201,
+          "body": {
+            "restaurant_address": "址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址",
+            "restaurant_id": 9,
+            "restaurant_name": "餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐"
+          }
+        }
+      ],
+      "committed_row": {
+        "restaurant_id": 9,
+        "restaurant_name": "餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐餐",
+        "restaurant_address": "址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址址"
+      },
+      "counts_before": {
+        "restaurants": 7,
+        "meals": 6
+      },
+      "counts_after": {
+        "restaurants": 8,
+        "meals": 6
+      }
+    },
+    {
+      "case": "test_restaurant_overlong_fields_reject_without_writes_and_recover",
+      "responses": [
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 400,
+          "body": {
+            "error": "餐廳名稱最多 40 個字"
+          }
+        },
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 201,
+          "body": {
+            "restaurant_address": "合成測試地址",
+            "restaurant_id": 10,
+            "restaurant_name": "館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館"
+          }
+        },
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 400,
+          "body": {
+            "error": "餐廳地址最多 80 個字"
+          }
+        },
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 201,
+          "body": {
+            "restaurant_address": "路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路",
+            "restaurant_id": 11,
+            "restaurant_name": "合成餐廳1ee72ffdb53d"
+          }
+        }
+      ],
+      "checks": [
+        {
+          "field": "restaurant_name",
+          "trimmed_rejected_length": 41,
+          "counts_before": {
+            "restaurants": 8,
+            "meals": 6
+          },
+          "counts_after_rejection": {
+            "restaurants": 8,
+            "meals": 6
+          },
+          "committed_recovery_row": {
+            "restaurant_id": 10,
+            "restaurant_name": "館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館館",
+            "restaurant_address": "合成測試地址"
+          }
+        },
+        {
+          "field": "restaurant_address",
+          "trimmed_rejected_length": 81,
+          "counts_before": {
+            "restaurants": 9,
+            "meals": 6
+          },
+          "counts_after_rejection": {
+            "restaurants": 9,
+            "meals": 6
+          },
+          "committed_recovery_row": {
+            "restaurant_id": 11,
+            "restaurant_name": "合成餐廳1ee72ffdb53d",
+            "restaurant_address": "路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路路"
+          }
+        }
+      ]
+    },
+    {
+      "case": "test_restaurant_response_survives_delete_after_commit",
+      "responses": [
+        {
+          "path": "/api/add_new_restaurant",
+          "status": 201,
+          "body": {
+            "restaurant_address": "合成測試地址",
+            "restaurant_id": 12,
+            "restaurant_name": "刪除競爭餐廳4fe39bfaeb49"
+          }
+        },
+        {
+          "path": "/api/delete_restaurant",
+          "status": 200,
+          "body": {
+            "message": "刪除成功"
+          }
+        }
+      ],
+      "committed_before_concurrent_delete": [
+        {
+          "restaurant_id": 12,
+          "restaurant_name": "刪除競爭餐廳4fe39bfaeb49",
+          "restaurant_address": "合成測試地址"
+        }
+      ],
+      "counts_before": {
+        "restaurants": 10,
+        "meals": 6
+      },
+      "counts_after": {
+        "restaurants": 10,
+        "meals": 6
+      },
+      "scheduling_hook": "delete API request after create commit, before response serialization"
+    }
+  ]
+}

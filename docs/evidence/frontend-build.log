@@ -1,0 +1,26 @@
+
+> frontend@0.0.0 build
+> run-p type-check "build-only {@}" --
+
+
+> frontend@0.0.0 type-check
+> vue-tsc --build
+
+
+> frontend@0.0.0 build-only
+> vite build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 20 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                   0.52 kB │ gzip:  0.32 kB
+dist/driver.html                                  0.52 kB │ gzip:  0.37 kB
+dist/assets/driver-B3uy3aCd.css                   1.69 kB │ gzip:  0.63 kB
+dist/assets/main-D1KkUIAp.css                     8.78 kB │ gzip:  2.62 kB
+dist/assets/driver-DJluaAe7.js                    6.37 kB │ gzip:  2.93 kB
+dist/assets/main-B393CqQu.js                      7.41 kB │ gzip:  3.25 kB
+dist/assets/runtime-dom.esm-bundler-q5DM7ja7.js  65.32 kB │ gzip: 25.70 kB
+
+✓ built in 96ms

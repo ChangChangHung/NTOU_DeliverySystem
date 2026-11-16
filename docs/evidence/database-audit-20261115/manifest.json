@@ -1,0 +1,154 @@
+{
+  "completed_at": "2026-11-15T22:25:45.085607+08:00",
+  "branch": "feature/yves20716-order-acceptance",
+  "base_commit": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+  "local_uncommitted_changes": true,
+  "results": {
+    "mysql_acceptance": 17,
+    "mysql_lifecycle": 23,
+    "mysql_catalog": 10,
+    "browser_integration": 8,
+    "browser_injected_response_and_layout": 13,
+    "independent_mysql_orders": 4,
+    "all_passed": true,
+    "typecheck": true,
+    "build": true
+  },
+  "source_sha256": {
+    "backend/server.py": "d204d204cbcf1f5eaa2d7e6f353a7e6e9a4dc6c67b9db3304870d78d2925af1f",
+    "backend/utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+    "backend/tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38",
+    "backend/tests/test_order_acceptance_mysql.py": "7335130a90a705c1bc0e8e8d0512480c4377def6fc339e3d35d5183aaf65380d",
+    "backend/tests/test_order_lifecycle_mysql.py": "3dedfca9c3f83f844c70ca5678788fddccfc8c6c5de94339384471fbe1e10e82",
+    "backend/tests/test_catalog_validation_mysql.py": "db03e10b8287da4706a8238ef9f140103203caba0502c92bb035d003f43f7827",
+    "backend/scripts/local_acceptance.py": "3986ffe3b5c8bf8c92521e50ca0405726a938c6e990b765ebd32f7243c539cb4",
+    "backend/scripts/local_integration.py": "f27d998475e6f1b057e4edecfdb14927e1052eb7ea14c190dc1c1c1bc68a7bd5",
+    "backend/scripts/seed_acceptance_demo.py": "98e0134e0aa48030e9a6d7f6da4b786c84d4d61e6189073b94c074f7f525b5f5",
+    "frontend/src/components/DriverLobby.vue": "7f9f9e651a2327affd6550af02e92e18271319998e368727002e10ee0443dbd6",
+    "frontend/tests/acceptance-integration.mjs": "262155984c80a8b47e029ffe292108d6e9025a24308410501bd8d8e90aab6ed2",
+    "frontend/tests/acceptance-audit.mjs": "ee01ee460214e4df5f5ea3bbc5f1f182b800039f65afbb27ba529c5287a8447a",
+    "frontend/tests/run-acceptance-integration.mjs": "e86cb5485742947384be23aee133a42330b13cb27da11640e7dca629bd9a50bd",
+    "frontend/vite.config.ts": "4ac1d0d5c179e955defabca00e63e1ba1bd14334f43123ae121c93d35df82cdd",
+    "frontend/src/App.vue": "f271de77b5c9a130accf16b6bf4d6f66df32acb6afd697b590d5d62e0ca15856"
+  },
+  "evidence": {
+    "before/order-contracts.json": {
+      "source": "artifacts/database-audit/order-contracts.json",
+      "sha256": "86637e075a2c28a97c1e6d90a25c9cc8a1519da6c1fe1b4d6afc0af1f7ff745f"
+    },
+    "before/lifecycle.json": {
+      "source": "artifacts/order-lifecycle-audit-20261115-221136-c1c714.json",
+      "sha256": "360f81c955e565504330698887fc637eb1f7d3780cf89980c21dd6c707215b84"
+    },
+    "before/lifecycle-response-races.json": {
+      "source": "artifacts/order-response-race-20261115-222110-300a98.json",
+      "sha256": "16c58209a49bd23d29388279de38ba70bba48148344e2580f160dc53239bc08b"
+    },
+    "before/checkout-response.json": {
+      "source": "artifacts/database-audit/checkout-response-before.json",
+      "sha256": "1d5ee9f4e1c6d4d7b0dad9a2974fd1171f77d6561377ca59a17ec01bce195a84"
+    },
+    "before/catalog-response.json": {
+      "source": "artifacts/database-audit/catalog-response-before-http.json",
+      "sha256": "144d12aab0517f191d6ed6bc53c76c39bd43e1d3c28009dc9a5dc7bb0b6ae8e0"
+    },
+    "before/browser-responses.json": {
+      "source": "artifacts/frontend-review-20261115/results.json",
+      "sha256": "4b0da1636c9ea9dc1992eba06d2f26811d5dccbae993044080542ab4ed1e4dba"
+    },
+    "before/mobile.json": {
+      "source": "artifacts/frontend-review-20261115/mobile-cli-output.json",
+      "sha256": "fd3251a92c298b02182ec455a5ef53bd8e8bdf107d03fa383ddca4333e23c68f"
+    },
+    "before/mobile.png": {
+      "source": "artifacts/frontend-review-20261115/mobile-long-content.png",
+      "sha256": "6238a89ef298f49fd5fe1fcadf71a54db0a1d9b57dab042fbf7d177a4c9b00b3"
+    },
+    "mysql-acceptance.json": {
+      "source": "artifacts/acceptance-test-20261115T142447.899836Z-888d4f.json",
+      "sha256": "d74fa627dfa7653c2fc8b304f97784ebd56a0ed399969514e7f5231868bc6a3d"
+    },
+    "mysql-lifecycle.json": {
+      "source": "artifacts/test-lifecycle-20261115T142446.536637Z-76e062.json",
+      "sha256": "6565142ef74ab374939c6c96e2efcc538f4ecbe05e5cf3f9598f74ff94c4a762"
+    },
+    "mysql-catalog.json": {
+      "source": "artifacts/test-catalog-20261115T142444.722784Z-996f19.json",
+      "sha256": "4a2901d040d82297e10cfd83695bbd8d4eb1d9e98dc2b50341ece52483dec3fc"
+    },
+    "typecheck.log": {
+      "source": "artifacts/audit-typecheck-20261115.log",
+      "sha256": "18ea05e139c8271c1126655ecb63e79b8bd85f54779fa7164492b4b8891f1fc0"
+    },
+    "build.log": {
+      "source": "artifacts/audit-build-20261115.log",
+      "sha256": "f7e373b7998e7d0d267b823d17ee6badc9d6ffa61f0c65f8387c0163f47f7da8"
+    },
+    "seed.json": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/seed.json",
+      "sha256": "7fadc8ac83ae1b43853522025657bf25edba028a7b40d3f4f83093c622e8a69f"
+    },
+    "browser-results.json": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/browser-results.json",
+      "sha256": "b5e0a72640480cc049242e09716f30cf76a76f2aa551ffde07b438659a441dc6"
+    },
+    "browser-audit-results.json": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/browser-audit-results.json",
+      "sha256": "6b80d398946cbad1eb02a262bd407d444e0b19cef04b50de2c8f75adfebe31ca"
+    },
+    "integration-results.json": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/integration-results.json",
+      "sha256": "34bab169c9099ae9867b324f12041e7e57ef460b4764394bffe68a58779aa86e"
+    },
+    "compete-0.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/compete-0.png",
+      "sha256": "c9ddb195d1cd84d4149d1c240a5ee5466adc688b953aa98190ab48da19c716b6"
+    },
+    "compete-1.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/compete-1.png",
+      "sha256": "a81b3a5f0e05d296c75b12e2be8995103437c49fc22f45d61c315a9f7bb3f0a5"
+    },
+    "stale-second-courier.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/stale-second-courier.png",
+      "sha256": "fdca03bfc0206d638170d79e659bd78193ce9098275d9ecc3621b45f13ea0131"
+    },
+    "own-orders-0.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/own-orders-0.png",
+      "sha256": "9de291cc4a4eb73c43e8273b2f0190ba1bec5d314cf604ffa4f3486569227378"
+    },
+    "own-orders-1.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/own-orders-1.png",
+      "sha256": "2b415d42f24bfca65e6736262dadd74310a97c63d2e648247d93a18ef150e01e"
+    },
+    "own-orders-load-error.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/own-orders-load-error.png",
+      "sha256": "3190ffd590ab6d92aae9300467d4082b7b8326067e501c3979ac39cece75ca83"
+    },
+    "own-orders-recovered.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/own-orders-recovered.png",
+      "sha256": "e7c2a77d18f11928feb4eb3871acaa1aa485da9a35a1c752ba9a278e4798bcd2"
+    },
+    "response-lost.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/response-lost.png",
+      "sha256": "e7c2a77d18f11928feb4eb3871acaa1aa485da9a35a1c752ba9a278e4798bcd2"
+    },
+    "audit/mobile-long-pending.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/audit/mobile-long-pending.png",
+      "sha256": "efff7475b3a1457ce5c574c38a652a63c675b82d4cc0893f6eae38539f3325ac"
+    },
+    "audit/mobile-long-accepted.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/audit/mobile-long-accepted.png",
+      "sha256": "663c813d26f79c06129ad2cfa6ae36b87d89011389ed9ebb04ca590820b68c9e"
+    },
+    "audit/desktop-long-accepted.png": {
+      "source": "artifacts/integration-20261115T142444Z-99f225/audit/desktop-long-accepted.png",
+      "sha256": "d874e33a0a4c8460e6e79c80a7dbdc1a2f4d918705079727e1df3139413bca41"
+    }
+  },
+  "notes": [
+    "Before and after results retain their original source hashes and test schemas.",
+    "Before cases intentionally freeze the clock for collision tests; these timestamps are not Demo order times.",
+    "The 88.32-second Demo was recorded before this audit; its manifest is retained unchanged.",
+    "API authorization, cancellation/deletion policy and the buyer interface integration remain team handoffs."
+  ]
+}

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><title>接單功能測試</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef1f5;color:#223346;font-family:system-ui}
+header{height:84px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;background:#22394d;color:white}
+h1{font-size:25px;margin:0}header p{margin:5px 0 0;font-size:15px;color:#d0dbe5}
+nav{display:flex;gap:12px}button{font:600 18px system-ui;padding:12px 24px;border:1px solid #b7c5d0;border-radius:7px;background:#fff;color:#22394d;cursor:pointer}
+button[aria-pressed=true]{background:#d7f1e8;border-color:#91c5b3}
+#couriers{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;height:calc(100vh - 188px)}
+section{background:white;border-radius:8px;overflow:hidden;border:1px solid #cbd6de;display:flex;flex-direction:column}
+h2{font-size:20px;margin:0;padding:11px 20px;background:#e1ebf3}#courier-b-title{background:#eee5d5}
+iframe{border:0;width:100%;flex:1;min-height:0;background:#f7f7f7}#database-panel{padding:16px;height:calc(100vh - 188px)}#database{height:100%}
+[hidden]{display:none!important}
+#caption{position:fixed;bottom:0;width:100%;height:104px;background:#182b3c;color:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;z-index:10}
+#caption strong{font-size:27px;font-weight:500}#caption span{font-size:21px;color:#d9e6ef}
+</style></head><body>
+<header><div><h1>接單功能測試</h1><p>兩個外送員頁面，連到同一份本機 MySQL</p></div><nav>
+<button id="show-couriers" aria-pressed="true">外送員接單頁</button><button id="show-database" aria-pressed="false">查詢資料庫</button></nav></header>
+<div id="couriers"><section><h2>外送員 #2</h2><iframe id="courier-a" title="外送員 #2 的接單頁" src="http://127.0.0.1:5180/driver.html"></iframe></section>
+<section><h2 id="courier-b-title">外送員 #3</h2><iframe id="courier-b" title="外送員 #3 的接單頁" src="http://127.0.0.1:5181/driver.html"></iframe></section></div>
+<div id="database-panel" hidden><iframe id="database" title="MySQL 查詢結果"></iframe></div>
+<div id="caption"><strong>我用兩個外送員頁面，測試接單後的結果。</strong><span>這次用測試訂單，#2、#3 是測試用的外送員身分。</span></div>
+<script>
+const couriers=document.querySelector('#couriers'),database=document.querySelector('#database-panel');
+document.querySelector('#show-couriers').onclick=()=>{couriers.hidden=false;database.hidden=true;document.querySelector('#show-couriers').setAttribute('aria-pressed','true');document.querySelector('#show-database').setAttribute('aria-pressed','false')};
+document.querySelector('#show-database').onclick=()=>{couriers.hidden=true;database.hidden=false;document.querySelector('#database').src='/database';document.querySelector('#show-couriers').setAttribute('aria-pressed','false');document.querySelector('#show-database').setAttribute('aria-pressed','true')};
+</script></body></html>

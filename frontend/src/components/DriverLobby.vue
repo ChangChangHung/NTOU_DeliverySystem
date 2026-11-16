@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 interface Meal {
   meal_id: number
@@ -15,15 +15,27 @@ interface Restaurant {
 }
 
 interface OrderStamp {
-  buyer_id: string
+  buyer_id: string | number
   timestamp: string
 }
 
-interface OrderMeal {
+type OrderState = 'in_cart' | 'pending' | 'processing' | 'completed' | 'cancelled'
+
+interface OrderMeal extends OrderStamp {
   meal_id: number
   quantity: number
   note: string | null
-  order_state: string
+  order_state: OrderState
+}
+
+interface Delivery extends OrderStamp {
+  pickup_address: string
+  deliverer_id: number | null
+}
+
+interface OrderDetails {
+  meals: OrderMeal[]
+  delivery: Delivery
 }
 
 interface LobbyItem {
@@ -34,71 +46,222 @@ interface LobbyItem {
   note: string | null
 }
 
-interface LobbyOrder {
-  buyer_id: string
-  timestamp: string
+interface LobbyOrder extends OrderStamp {
   address: string
   items: LobbyItem[]
   total: number
 }
 
-// 登入還沒做好，先固定用這個外送員帳號接單
-const DELIVERER_ID = 1
+// 延續目前的示範帳號；登入串接完成後改由登入狀態提供。
+const DELIVERER_ID = Number(import.meta.env.VITE_DELIVERER_ID ?? '1')
+const validDeliverer = isPositiveInteger(DELIVERER_ID)
+const REQUEST_TIMEOUT_MS = 15000
 
 const orders = ref<LobbyOrder[]>([])
-
+const acceptedOrders = ref<LobbyOrder[]>([])
 const loading = ref(true)
 const error = ref('')
 const notice = ref('')
+const noticeKind = ref<'success' | 'error' | 'unknown'>('success')
+const acceptingKey = ref<string | null>(null)
+let loadSequence = 0
+let loadController: AbortController | undefined
+let acceptController: AbortController | undefined
+
+class ApiError extends Error {
+  constructor(message: string, readonly status: number, readonly hasJsonBody = false) {
+    super(message)
+  }
+}
+
+class ResponseError extends Error {}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+}
+
+function isMeal(value: unknown): value is Meal {
+  return isRecord(value)
+    && isPositiveInteger(value.meal_id)
+    && typeof value.meal_name === 'string'
+    && isPositiveInteger(value.restaurant_id)
+    && typeof value.price === 'number' && Number.isSafeInteger(value.price) && value.price >= 0
+}
+
+function isRestaurant(value: unknown): value is Restaurant {
+  return isRecord(value)
+    && isPositiveInteger(value.restaurant_id)
+    && typeof value.restaurant_name === 'string'
+    && typeof value.restaurant_address === 'string'
+}
+
+function isOrderStamp(value: unknown): value is OrderStamp {
+  return isRecord(value)
+    && (isPositiveInteger(value.buyer_id)
+      || (typeof value.buyer_id === 'string' && /^[1-9]\d*$/.test(value.buyer_id)))
+    && typeof value.timestamp === 'string'
+    && /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value.timestamp)
+}
+
+function isOrderMeal(value: unknown): value is OrderMeal {
+  return isRecord(value) && isOrderStamp(value)
+    && isPositiveInteger(value.meal_id)
+    && isPositiveInteger(value.quantity)
+    && (value.note === null || typeof value.note === 'string')
+    && typeof value.order_state === 'string'
+    && ['in_cart', 'pending', 'processing', 'completed', 'cancelled'].includes(value.order_state)
+}
+
+function isDelivery(value: unknown): value is Delivery {
+  return isRecord(value) && isOrderStamp(value)
+    && typeof value.pickup_address === 'string' && value.pickup_address.trim().length > 0
+    && (value.deliverer_id === null || isPositiveInteger(value.deliverer_id))
+}
+
+function listOf<T>(value: unknown, guard: (item: unknown) => item is T, label: string): T[] {
+  if (!Array.isArray(value) || !value.every(guard)) {
+    throw new ResponseError(`${label}格式不正確，請確認後端資料。`)
+  }
+  return value
+}
+
+function responseMessage(value: unknown, fallback: string): string {
+  if (isRecord(value)) {
+    if (typeof value.message === 'string' && value.message.trim()) return value.message
+    if (typeof value.error === 'string' && value.error.trim()) return value.error
+  }
+  return fallback
+}
+
+async function requestJson(path: string, options: RequestInit = {}): Promise<unknown> {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  if (options.signal?.aborted) controller.abort()
+  options.signal?.addEventListener('abort', abort, { once: true })
+  const timeout = window.setTimeout(abort, REQUEST_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(path, { ...options, signal: controller.signal })
+    let result: unknown
+    try {
+      result = await response.json()
+    } catch {
+      if (!response.ok) throw new ApiError(`伺服器回應錯誤（${response.status}）。`, response.status)
+      throw new ResponseError('伺服器未回傳有效的 JSON 資料。')
+    }
+    if (!response.ok) {
+      throw new ApiError(responseMessage(result, `請求失敗（${response.status}）。`), response.status, isRecord(result))
+    }
+    return result
+  } finally {
+    window.clearTimeout(timeout)
+    options.signal?.removeEventListener('abort', abort)
+  }
+}
+
+function postJson(stamp: OrderStamp, signal: AbortSignal): RequestInit {
+  return {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(stamp),
+    signal,
+  }
+}
+
+function orderKey(order: OrderStamp): string {
+  return `${order.buyer_id}:${order.timestamp}`
+}
+
+function matchesOrder(value: OrderStamp, stamp: OrderStamp): boolean {
+  return String(value.buyer_id) === String(stamp.buyer_id) && value.timestamp === stamp.timestamp
+}
+
+async function readOrderDetails(stamp: OrderStamp, signal: AbortSignal): Promise<OrderDetails | null> {
+  try {
+    const meals = listOf(
+      await requestJson('/api/view_meals_of_order', postJson(stamp, signal)),
+      isOrderMeal, '訂單餐點資料',
+    )
+    if (!meals.every(item => matchesOrder(item, stamp))) {
+      throw new ResponseError('餐點資料與查詢的訂單不一致，請重新整理。')
+    }
+    if (meals.length === 0
+      || (!meals.every(item => item.order_state === 'pending')
+        && !meals.every(item => item.order_state === 'processing'))) return null
+
+    const deliveries = listOf(
+      await requestJson('/api/view_delivery', postJson(stamp, signal)),
+      isDelivery, '送餐資料',
+    )
+    if (!deliveries.every(item => matchesOrder(item, stamp))) {
+      throw new ResponseError('送餐資料與查詢的訂單不一致，請重新整理。')
+    }
+    const delivery = deliveries[0]
+    if (!delivery) return null
+    if (deliveries.length !== 1) throw new ResponseError('同一訂單有多筆送餐資料，請確認後端資料。')
+    return { meals, delivery }
+  } catch (e) {
+    // 缺少 Delivery 的訂單沿用既有規則；其他錯誤不能當成空清單。
+    if (e instanceof ApiError && e.status === 404 && e.hasJsonBody) return null
+    throw e
+  }
+}
+
+function hasConsistentAssignment(details: OrderDetails): boolean {
+  return details.meals.every(item => item.order_state === 'pending')
+    ? details.delivery.deliverer_id === null
+    : details.delivery.deliverer_id !== null
+}
 
 async function loadOrders() {
+  const sequence = ++loadSequence
+  loadController?.abort()
+  const controller = new AbortController()
+  loadController = controller
   loading.value = true
   error.value = ''
 
   try {
-    const mealResponse = await fetch('/api/view_all_meals')
-    const meals: Meal[] = await mealResponse.json()
-
-    const restaurantResponse = await fetch('/api/view_all_restaurants')
-    const restaurants: Restaurant[] = await restaurantResponse.json()
-
-    const stampResponse = await fetch('/api/view_order_by_stamp')
-    if (!stampResponse.ok) throw new Error('無法取得訂單')
-
-    const stamps: OrderStamp[] = await stampResponse.json()
+    const meals = listOf(
+      await requestJson('/api/view_all_meals', { signal: controller.signal }), isMeal, '餐點資料',
+    )
+    const restaurants = listOf(
+      await requestJson('/api/view_all_restaurants', { signal: controller.signal }),
+      isRestaurant, '餐廳資料',
+    )
+    const stamps = listOf(
+      await requestJson('/api/view_order_by_stamp', { signal: controller.signal }),
+      isOrderStamp, '訂單資料',
+    )
     const result: LobbyOrder[] = []
+    const acceptedResult: LobbyOrder[] = []
 
     for (const stamp of stamps) {
-      // 查這筆訂單的餐點，只留還沒被接的
-      const mealsOfOrderResponse = await fetch('/api/view_meals_of_order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stamp),
-      })
-      const orderMeals: OrderMeal[] = await mealsOfOrderResponse.json()
-
-      if (orderMeals[0]!.order_state !== 'pending') continue
-
-      // 查送餐地址，沒有外送資料的訂單不能接，先不顯示
-      const deliveryResponse = await fetch('/api/view_delivery', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stamp),
-      })
-      if (!deliveryResponse.ok) continue
-
-      const delivery = await deliveryResponse.json()
+      let details = await readOrderDetails(stamp, controller.signal)
+      if (!details) continue
+      // 兩次查詢之間可能剛好有人接單或棄單，只重查一次確認。
+      if (!hasConsistentAssignment(details)) {
+        details = await readOrderDetails(stamp, controller.signal)
+        if (!details || !hasConsistentAssignment(details)) {
+          throw new ResponseError('訂單狀態與外送員資料尚未一致，請重新整理後再操作。')
+        }
+      }
+      const { meals: orderMeals, delivery } = details
+      const isPending = orderMeals.every(item => item.order_state === 'pending')
+        && delivery.deliverer_id === null
+      const isAcceptedByMe = validDeliverer
+        && orderMeals.every(item => item.order_state === 'processing')
+        && delivery.deliverer_id === DELIVERER_ID
+      if (!isPending && !isAcceptedByMe) continue
 
       const items = orderMeals.map(orderMeal => {
-        const meal = meals.find(m => m.meal_id === orderMeal.meal_id)!
-        const restaurant = restaurants.find(
-          r => r.restaurant_id === meal.restaurant_id,
-        )!
-
+        const meal = meals.find(item => item.meal_id === orderMeal.meal_id)
+        const restaurant = meal && restaurants.find(item => item.restaurant_id === meal.restaurant_id)
+        if (!meal || !restaurant) throw new ResponseError('訂單中的餐點或餐廳資料不完整，請重新整理。')
         return {
           name: meal.meal_name,
           restaurant: restaurant.restaurant_name,
@@ -108,73 +271,106 @@ async function loadOrders() {
         }
       })
 
-      result.push({
-        buyer_id: stamp.buyer_id,
-        timestamp: stamp.timestamp,
-        address: delivery[0].pickup_address,
+      const total = items.reduce((sum, item) => {
+        const subtotal = item.price * item.quantity
+        if (!Number.isSafeInteger(subtotal) || !Number.isSafeInteger(sum + subtotal)) {
+          throw new ResponseError('訂單金額超出可正確計算的範圍，請確認餐點價格與數量。')
+        }
+        return sum + subtotal
+      }, 0)
+      const target = isPending ? result : acceptedResult
+      target.push({
+        ...stamp,
+        address: delivery.pickup_address,
         items,
-        total: items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        ),
+        total,
       })
     }
 
-    orders.value = result
-  } catch {
-    error.value = '無法連接後端，請確認 Python 伺服器是否啟動。'
+    if (sequence === loadSequence) {
+      orders.value = result
+      acceptedOrders.value = acceptedResult
+    }
+  } catch (e) {
+    if (sequence !== loadSequence || controller.signal.aborted) return
+    error.value = e instanceof ApiError || e instanceof ResponseError
+      ? e.message
+      : '無法載入訂單，請確認後端是否啟動，再重新整理。'
   } finally {
-    loading.value = false
+    if (sequence === loadSequence) loading.value = false
   }
 }
 
 async function acceptOrder(order: LobbyOrder) {
+  if (acceptingKey.value !== null || loading.value || !validDeliverer) return
+  acceptingKey.value = orderKey(order)
   notice.value = ''
+  // 接單後只採用重新讀取的結果，避免先前的載入覆蓋清單。
+  ++loadSequence
+  loadController?.abort()
+  const controller = new AbortController()
+  acceptController = controller
 
   try {
-    const response = await fetch('/api/process_order', {
+    const result = await requestJson('/api/process_order', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         buyer_id: order.buyer_id,
         timestamp: order.timestamp,
         deliverer_id: DELIVERER_ID,
       }),
+      signal: controller.signal,
     })
 
-    const result = await response.json()
-
-    if (!response.ok) {
-      throw new Error(result.message ? String(result.message) : '接單失敗')
+    if (!isRecord(result) || result.success !== true
+      || String(result.buyer_id) !== String(order.buyer_id)
+      || result.timestamp !== order.timestamp || result.deliverer_id !== DELIVERER_ID) {
+      throw new ResponseError('接單回應資料不完整。')
     }
-
+    noticeKind.value = 'success'
     notice.value = '接單成功！'
   } catch (e) {
-    notice.value = e instanceof Error ? e.message : '接單失敗，請稍後再試。'
+    if (controller.signal.aborted) return
+    if (e instanceof ApiError && e.status >= 400 && e.status < 500 && e.hasJsonBody) {
+      noticeKind.value = 'error'
+      notice.value = e.message
+    } else {
+      // 中斷或無法解析回應時，伺服器仍可能已成功；不自動重送 POST。
+      noticeKind.value = 'unknown'
+      notice.value = '尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。'
+    }
+  } finally {
+    if (!controller.signal.aborted) await loadOrders()
+    acceptingKey.value = null
+    acceptController = undefined
   }
-
-  await loadOrders()
 }
 
 onMounted(loadOrders)
+onBeforeUnmount(() => {
+  ++loadSequence
+  loadController?.abort()
+  acceptController?.abort()
+})
 </script>
 
 <template>
   <div class="page">
     <h1>外送員接單大廳</h1>
+    <p class="demo-account" v-if="validDeliverer">示範帳號：外送員 #{{ DELIVERER_ID }}（尚未串接登入）</p>
+    <p class="notice error-notice" v-else>示範外送員帳號設定無效，請確認 VITE_DELIVERER_ID 是正整數。</p>
 
     <div class="toolbar">
       <span>待接訂單 {{ orders.length }} 筆</span>
-      <button @click="loadOrders">重新整理</button>
+      <button :disabled="loading || acceptingKey !== null" @click="loadOrders">重新整理</button>
     </div>
 
-    <p v-if="notice" class="notice">{{ notice }}</p>
+    <p v-if="notice" class="notice" :class="noticeKind" role="status" aria-live="polite">{{ notice }}</p>
 
     <div v-if="loading" class="message">載入中……</div>
 
-    <div v-else-if="error" class="message">{{ error }}</div>
+    <div v-else-if="error" class="message" role="alert">{{ error }}</div>
 
     <div v-else-if="orders.length === 0" class="message">
       目前沒有待接訂單
@@ -183,7 +379,7 @@ onMounted(loadOrders)
     <div v-else>
       <div
         v-for="order in orders"
-        :key="order.buyer_id + order.timestamp"
+        :key="orderKey(order)"
         class="order"
       >
         <div class="order-title">
@@ -202,11 +398,59 @@ onMounted(loadOrders)
         </div>
 
         <div class="bottom">
-          <span class="total">總金額：NT$ {{ order.total }}</span>
-          <button class="accept" @click="acceptOrder(order)">接單</button>
+          <span class="total">餐點小計：NT$ {{ order.total }}</span>
+          <button
+            class="accept"
+            :disabled="acceptingKey !== null || loading || !validDeliverer"
+            @click="acceptOrder(order)"
+          >
+            {{ acceptingKey === orderKey(order) ? '接單中……' : '接單' }}
+          </button>
         </div>
       </div>
     </div>
+
+    <section
+      v-if="!loading && !error && validDeliverer"
+      class="accepted-section"
+      data-testid="accepted-orders"
+      aria-labelledby="accepted-orders-title"
+    >
+      <div class="section-heading">
+        <h2 id="accepted-orders-title">我的已接訂單</h2>
+        <span>共 {{ acceptedOrders.length }} 筆</span>
+      </div>
+
+      <div v-if="acceptedOrders.length === 0" class="message">目前沒有已接訂單</div>
+
+      <div
+        v-for="order in acceptedOrders"
+        :key="orderKey(order)"
+        class="accepted-order"
+        data-testid="accepted-order"
+        :data-order-key="orderKey(order)"
+      >
+        <div class="order-title">
+          <strong>買家 #{{ order.buyer_id }}</strong>
+          <span class="time">{{ order.timestamp }}</span>
+        </div>
+
+        <p>送餐地址：{{ order.address }}</p>
+
+        <div v-for="(item, index) in order.items" :key="index">
+          <div class="item">
+            <span>{{ item.name }} × {{ item.quantity }}（{{ item.restaurant }}）</span>
+            <span>NT$ {{ item.price * item.quantity }}</span>
+          </div>
+          <p v-if="item.note" class="note">備註：{{ item.note }}</p>
+        </div>
+
+        <div class="bottom">
+          <span class="total">餐點小計：NT$ {{ order.total }}</span>
+          <span class="accepted-status">已接單</span>
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -221,6 +465,16 @@ onMounted(loadOrders)
 h1 {
   text-align: center;
 }
+
+.demo-account {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+.notice.success { color: #215c36; }
+.notice.error, .error-notice { color: #992e25; }
+.notice.unknown { color: #79500b; }
 
 .toolbar {
   display: flex;
@@ -241,18 +495,46 @@ h1 {
   padding: 30px;
 }
 
-.order {
+.order, .accepted-order {
   background: white;
   padding: 20px;
   border: 1px solid #ddd;
   border-radius: 10px;
   margin-bottom: 15px;
+  overflow-wrap: anywhere;
+}
+
+.accepted-section {
+  border-top: 1px solid #ddd;
+  margin-top: 30px;
+  padding-top: 20px;
+}
+
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.accepted-status {
+  color: #215c36;
+  font-weight: bold;
 }
 
 .order-title {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
 }
@@ -264,7 +546,17 @@ h1 {
 .item {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   padding: 5px 0;
+}
+
+.item > span:first-child {
+  min-width: 0;
+}
+
+.item > span:last-child {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .note {
@@ -293,6 +585,11 @@ button {
   padding: 8px 12px;
   cursor: pointer;
   background: #ddd;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .accept {

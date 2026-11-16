@@ -219,6 +219,11 @@ def create_restaurant():
     if not isinstance(restaurant_address, str) or not restaurant_address.strip():
         return jsonify({"error": "restaurant_address 不可為空"}), 400
 
+    if len(restaurant_name.strip()) > 40:
+        return jsonify({"error": "餐廳名稱最多 40 個字"}), 400
+    if len(restaurant_address.strip()) > 80:
+        return jsonify({"error": "餐廳地址最多 80 個字"}), 400
+
     restaurant = Restaurants(
         restaurant_name=restaurant_name.strip(),
         restaurant_address=restaurant_address.strip()
@@ -227,12 +232,17 @@ def create_restaurant():
     db.session.add(restaurant)
 
     try:
+        db.session.flush()
+        response_payload = restaurant.to_dict()
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return jsonify({"error": "餐廳已存在"}), 409
+    except Exception as e:
+        db.session.rollback()
+        return utils.general_exception_log(e, "新增餐廳失敗")
 
-    return jsonify(restaurant.to_dict()), 201
+    return jsonify(response_payload), 201
 
 
 # 新增餐點
@@ -249,6 +259,8 @@ def create_meal():
 
     if not isinstance(meal_name, str) or not meal_name.strip():
         return jsonify({"error": "meal_name 不可為空"}), 400
+    if len(meal_name.strip()) > 40:
+        return jsonify({"error": "餐點名稱最多 40 個字"}), 400
 
     # 驗證restaurant_id
     restaurant_id, notPositiveNumErr = utils.validate_positive_int(restaurant_id,"restaurant_id")
@@ -259,6 +271,8 @@ def create_meal():
     price, notPositiveNumErr = utils.validate_positive_int(price,"price")
     if notPositiveNumErr:
         return notPositiveNumErr
+    if price > 2_147_483_647:
+        return jsonify({"error": "價格超過資料庫可儲存的整數範圍"}), 400
 
     meal = Meals(
         meal_name=meal_name.strip(),
@@ -269,12 +283,17 @@ def create_meal():
     db.session.add(meal)
 
     try:
+        db.session.flush()
+        response_payload = meal.to_dict()
         db.session.commit()
     except IntegrityError:
         db.session.rollback()
         return jsonify({"error": "新增餐點失敗，請確認 restaurant_id 是否存在"}), 409
+    except Exception as e:
+        db.session.rollback()
+        return utils.general_exception_log(e, "新增餐點失敗")
 
-    return jsonify(meal.to_dict()), 201
+    return jsonify(response_payload), 201
 
 
 # 刪除餐廳
@@ -595,9 +614,6 @@ def add_new_order():
             "message": "buyer_id 不存在"
         }), 404
 
-    # 取得目前時間，同一次新增的訂單共用這個時間
-    timestamp = datetime.now().replace(microsecond=0)
-
     new_orders = []
 
     # 逐一處理每個餐點
@@ -622,6 +638,11 @@ def add_new_order():
         quantity, notPositiveNumErr = utils.validate_positive_int(quantity,"quantity")
         if notPositiveNumErr:
             return notPositiveNumErr
+        if quantity > 2_147_483_647:
+            return jsonify({
+                "success": False,
+                "message": "quantity 超過資料庫可儲存的整數範圍"
+            }), 400
 
         # 驗證 note
         if note is not None and (
@@ -646,7 +667,6 @@ def add_new_order():
             buyer_id=buyer_id,
             meal_id=meal_id,
             quantity=quantity,
-            timestamp=timestamp,
             note=note,
             order_state=OrderState.PENDING
         )
@@ -655,10 +675,38 @@ def add_new_order():
 
     # 將所有訂單一次寫入資料庫
     try:
-        db.session.add_all(new_orders)
-        db.session.commit()
+        # 同一買家建單先排隊，避免秒級時間戳把兩次下單合成一單。
+        locked_buyer = db.session.execute(
+            select(Users.user_id).where(Users.user_id == buyer_id).with_for_update()
+        ).scalar_one_or_none()
+        if locked_buyer is None:
+            return jsonify({"success": False, "message": "buyer_id 不存在"}), 404
 
-        return jsonify({
+        timestamp = datetime.now().replace(microsecond=0)
+        # 使用 current read，不能沿用前面驗證資料時建立的舊快照。
+        existing_order = db.session.execute(
+            select(Orders.order_id).where(
+                Orders.buyer_id == buyer_id, Orders.timestamp == timestamp
+            ).limit(1).with_for_update()
+        ).first()
+        existing_delivery = db.session.execute(
+            select(Delivery.buyer_id).where(
+                Delivery.buyer_id == buyer_id, Delivery.timestamp == timestamp
+            ).with_for_update()
+        ).first()
+        if existing_order is not None or existing_delivery is not None:
+            return jsonify({
+                "success": False,
+                "message": "這一秒已有同一買家的訂單，請稍後再下單"
+            }), 409
+
+        for order in new_orders:
+            order.timestamp = timestamp
+        db.session.add_all(new_orders)
+        db.session.flush()
+
+        # 先保留這次寫入的結果；commit 後其他請求可能已刪除或更新訂單。
+        response_payload = {
             "success": True,
             "message": "訂單建立成功",
             "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
@@ -674,7 +722,9 @@ def add_new_order():
                 }
                 for order in new_orders
             ]
-        }), 201
+        }
+        db.session.commit()
+        return jsonify(response_payload), 201
 
     except IntegrityError:
         db.session.rollback()
@@ -686,7 +736,7 @@ def add_new_order():
 
     except Exception as e:
         db.session.rollback()
-        utils.general_exception_log(e, "建立訂單失敗")
+        return utils.general_exception_log(e, "建立訂單失敗")
 
 # 查看訂單(使用者id+時間)
 @app.get("/api/view_order_by_stamp")
@@ -823,7 +873,7 @@ def add_new_delivery():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            )
+            ).order_by(Orders.order_id).with_for_update()
         ).scalars().all()
 
         if not orders:
@@ -841,9 +891,8 @@ def add_new_delivery():
         )
 
         db.session.add(new_delivery)
-        db.session.commit()
 
-        return jsonify({
+        response = {
             "success": True,
             "message": "外送需求建立成功",
             "delivery": {
@@ -852,7 +901,9 @@ def add_new_delivery():
                 "deliverer_id": new_delivery.deliverer_id,
                 "pickup_address": new_delivery.pickup_address
             }
-        }), 201
+        }
+        db.session.commit()
+        return jsonify(response), 201
 
     except IntegrityError as e:
         db.session.rollback()
@@ -950,7 +1001,7 @@ def cancel_order():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            )
+            ).order_by(Orders.order_id).with_for_update()
         ).scalars().all()
 
         if not orders:
@@ -976,9 +1027,7 @@ def cancel_order():
         for order in orders:
             order.order_state = OrderState.CANCELLED
 
-        db.session.commit()
-
-        return jsonify({
+        response = {
             "success": True,
             "message": "訂單取消成功",
             "buyer_id": buyer_id,
@@ -992,11 +1041,13 @@ def cancel_order():
                 }
                 for order in orders
             ]
-        }), 200
+        }
+        db.session.commit()
+        return jsonify(response), 200
 
     except Exception as e:
         db.session.rollback()
-        utils.general_exception_log(e,"取消訂單失敗")
+        return utils.general_exception_log(e,"取消訂單失敗")
 
 # 刪除訂單
 @app.delete("/api/delete_order")
@@ -1021,11 +1072,25 @@ def delete_order():
         return timestampTypeErr
 
     try:
-        # 刪除符合條件的所有訂單
-        deleted_count = Orders.query.filter_by(
-            buyer_id=buyer_id,
-            timestamp=timestamp
-        ).delete(synchronize_session=False)
+        # 與其他訂單操作保持相同鎖定順序，兩張表在同一交易刪除。
+        orders = db.session.execute(
+            select(Orders).where(
+                Orders.buyer_id == buyer_id,
+                Orders.timestamp == timestamp
+            ).order_by(Orders.order_id).with_for_update()
+        ).scalars().all()
+        delivery = db.session.execute(
+            select(Delivery).where(
+                Delivery.buyer_id == buyer_id,
+                Delivery.timestamp == timestamp
+            ).with_for_update()
+        ).scalar_one_or_none()
+
+        deleted_count = len(orders)
+        if delivery is not None:
+            db.session.delete(delivery)
+        for order in orders:
+            db.session.delete(order)
 
         db.session.commit()
 
@@ -1090,7 +1155,7 @@ def process_order():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            ).with_for_update()
+            ).order_by(Orders.order_id).with_for_update()
         ).scalars().all()
 
         if not orders:
@@ -1122,7 +1187,7 @@ def process_order():
             select(Delivery).where(
                 Delivery.buyer_id == buyer_id,
                 Delivery.timestamp == timestamp
-            )
+            ).with_for_update()
         ).scalar_one_or_none()
 
         if delivery is None:
@@ -1148,10 +1213,8 @@ def process_order():
         # 修改對應的外送員 ID
         delivery.deliverer_id = deliverer_id
 
-        # 一次提交兩張資料表的修改
-        db.session.commit()
-
-        return jsonify({
+        # 先取回應所需純值，避免提交後被其他請求刪除而重讀失敗。
+        response = {
             "success": True,
             "message": "訂單承接成功",
             "buyer_id": buyer_id,
@@ -1166,7 +1229,10 @@ def process_order():
                 }
                 for order in orders
             ]
-        }), 200
+        }
+        # 一次提交兩張資料表的修改
+        db.session.commit()
+        return jsonify(response), 200
 
     except Exception as e:
         db.session.rollback()
@@ -1211,7 +1277,7 @@ def complete_order():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            )
+            ).order_by(Orders.order_id).with_for_update()
         ).scalars().all()
 
         if not orders:
@@ -1254,9 +1320,7 @@ def complete_order():
         for order in orders:
             order.order_state = OrderState.COMPLETED
 
-        db.session.commit()
-
-        return jsonify({
+        response = {
             "success": True,
             "message": "訂單完成",
             "buyer_id": buyer_id,
@@ -1270,7 +1334,9 @@ def complete_order():
                 }
                 for order in orders
             ]
-        }), 200
+        }
+        db.session.commit()
+        return jsonify(response), 200
 
     except Exception as e:
         db.session.rollback()
@@ -1305,7 +1371,7 @@ def abandon_order():
             select(Orders).where(
                 Orders.buyer_id == buyer_id,
                 Orders.timestamp == timestamp
-            )
+            ).order_by(Orders.order_id).with_for_update()
         ).scalars().all()
 
         if not orders:
@@ -1336,7 +1402,7 @@ def abandon_order():
             select(Delivery).where(
                 Delivery.buyer_id == buyer_id,
                 Delivery.timestamp == timestamp
-            )
+            ).with_for_update()
         ).scalar_one_or_none()
 
         if delivery is None:
@@ -1352,10 +1418,7 @@ def abandon_order():
         # 清除外送員 ID
         delivery.deliverer_id = None
 
-        # 一次提交兩張資料表的修改
-        db.session.commit()
-
-        return jsonify({
+        response = {
             "success": True,
             "message": "已放棄承接訂單",
             "buyer_id": buyer_id,
@@ -1370,7 +1433,10 @@ def abandon_order():
                 }
                 for order in orders
             ]
-        }), 200
+        }
+        # 一次提交兩張資料表的修改
+        db.session.commit()
+        return jsonify(response), 200
 
     except Exception as e:
         db.session.rollback()

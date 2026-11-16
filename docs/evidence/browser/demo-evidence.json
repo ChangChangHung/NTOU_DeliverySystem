@@ -1,0 +1,59 @@
+{
+  "successful": true,
+  "synthetic_data_only": true,
+  "events": [
+    {
+      "name": "initial_lobby",
+      "seconds": 0.12,
+      "visible_orders": 2,
+      "courier_id": 2
+    },
+    {
+      "name": "multi_meal_accept_success",
+      "seconds": 6.11,
+      "buyer_id": 1
+    },
+    {
+      "name": "refresh_keeps_accepted_order_hidden",
+      "seconds": 12.03
+    },
+    {
+      "name": "rival_accepts_via_real_local_api",
+      "seconds": 15.05,
+      "status": 200,
+      "courier_id": 3,
+      "buyer_id": 4
+    },
+    {
+      "name": "stale_lobby_conflict_and_empty",
+      "seconds": 18
+    },
+    {
+      "name": "offline_load_error",
+      "seconds": 23.87
+    },
+    {
+      "name": "online_recovered_empty",
+      "seconds": 29.8
+    }
+  ],
+  "browser_acceptance_responses": [
+    {
+      "status": 200,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2030-01-18 20:40:51",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "status": 409,
+      "request": {
+        "buyer_id": "4",
+        "timestamp": "2030-02-06 23:42:18",
+        "deliverer_id": 2
+      }
+    }
+  ],
+  "rival_request": "Real local API request by courier 3; not a second browser or a concurrent race demonstration"
+}

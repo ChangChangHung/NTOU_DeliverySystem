@@ -1,0 +1,36 @@
+[
+  {
+    "scenario": "ready_multi_meal",
+    "buyer_id": 1,
+    "timestamp": "2030-01-18 20:40:51",
+    "committed_state": {
+      "orders": [
+        {
+          "order_id": 1,
+          "state": "PROCESSING"
+        },
+        {
+          "order_id": 2,
+          "state": "PROCESSING"
+        }
+      ],
+      "delivery_exists": true,
+      "deliverer_id": 2
+    }
+  },
+  {
+    "scenario": "ready_single_meal",
+    "buyer_id": 4,
+    "timestamp": "2030-02-06 23:42:18",
+    "committed_state": {
+      "orders": [
+        {
+          "order_id": 3,
+          "state": "PROCESSING"
+        }
+      ],
+      "delivery_exists": true,
+      "deliverer_id": 3
+    }
+  }
+]

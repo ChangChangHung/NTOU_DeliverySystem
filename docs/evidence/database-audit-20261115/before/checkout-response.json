@@ -1,0 +1,90 @@
+{
+  "successful": false,
+  "tests_run": 1,
+  "failures": 1,
+  "errors": 0,
+  "metadata": {
+    "database": "ntou_acceptance_test_20261115_baf79b7472",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "6cd8dde343a9cd1e38b5c2178143e5d97d0c9a4997483e654c10297a66e24316",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes."
+  },
+  "evidence": [
+    {
+      "case": "test_checkout_response_survives_delete_after_commit",
+      "order_identity": {
+        "buyer_id": 1,
+        "timestamp": "2040-01-02 03:04:05"
+      },
+      "responses": [
+        {
+          "path": "/api/add_new_order",
+          "status": 500,
+          "body": {
+            "error_message": "Instance '<Orders at 0x1088fa990>' has been deleted, or its row is otherwise not present.",
+            "error_type": "ObjectDeletedError",
+            "message": "建立訂單失敗",
+            "success": false
+          }
+        },
+        {
+          "path": "/api/delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_concurrent_delete": [
+        {
+          "orders": [
+            {
+              "order_id": 3,
+              "state": "PENDING"
+            },
+            {
+              "order_id": 4,
+              "state": "PENDING"
+            }
+          ],
+          "delivery_exists": false,
+          "deliverer_id": null
+        }
+      ],
+      "scheduling_hook": "delete_order request after create commit, before response serialization"
+    }
+  ]
+}

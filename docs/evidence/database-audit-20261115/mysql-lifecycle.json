@@ -1,0 +1,1317 @@
+{
+  "suite": "order_lifecycle_mysql",
+  "successful": true,
+  "tests_run": 23,
+  "failures": 0,
+  "errors": 0,
+  "metadata": {
+    "database": "ntou_acceptance_lifecycle_20261115_70fce4739d",
+    "host": "127.0.0.1",
+    "port": 3307,
+    "mysql_version": "8.0.46",
+    "mysql_distribution": "MySQL Community Server - GPL",
+    "storage_engine": "InnoDB",
+    "tables": [
+      "delivery",
+      "meals",
+      "orders",
+      "restaurants",
+      "users"
+    ],
+    "synthetic_data_only": true,
+    "database_retained_for_inspection": true,
+    "python_version": "3.13.2",
+    "package_versions": {
+      "Flask": "3.1.3",
+      "Flask-SQLAlchemy": "3.1.1",
+      "SQLAlchemy": "2.1.8",
+      "python-dotenv": "1.2.4",
+      "PyMySQL": "1.2.4"
+    },
+    "source_sha256": {
+      "server.py": "d204d204cbcf1f5eaa2d7e6f353a7e6e9a4dc6c67b9db3304870d78d2925af1f",
+      "utils.py": "40e4d7eba9fefb9ef140df5f8cfe0110c7875e501019c79867ec671b0f61246a",
+      "tests/mysql_support.py": "e8df8638fc6a1124cd13555b361684a34ccb9d5cdc2c6bed414866d5f0563d38"
+    },
+    "git_head": "e7bcf8e9bf982ac11b0a94dbc349b467cbe3e56f",
+    "source_note": "Source hashes identify tested working-tree files; git_head alone does not include uncommitted changes.",
+    "test_source_sha256": "3dedfca9c3f83f844c70ca5678788fddccfc8c6c5de94339384471fbe1e10e82"
+  },
+  "evidence": [
+    {
+      "case": "test_abandon_failure_rolls_back_both_tables",
+      "identity": {
+        "buyer_id": 1,
+        "timestamp": "2030-06-23 21:44:51"
+      },
+      "responses": [
+        {
+          "operation": "abandon_order",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic lifecycle failure after real UPDATE",
+            "error_type": "RuntimeError",
+            "message": "放棄承接訂單失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 1,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 2,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 2
+      },
+      "synthetic_failure_injection": true,
+      "updated_tables_before_failure": [
+        "DELIVERY",
+        "ORDERS"
+      ]
+    },
+    {
+      "case": "test_abandon_response_survives_delete_after_commit",
+      "identity": {
+        "buyer_id": 4,
+        "timestamp": "2030-02-06 11:00:57"
+      },
+      "responses": [
+        {
+          "operation": "abandon_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 4,
+            "deliverer_id": null,
+            "message": "已放棄承接訂單",
+            "success": true,
+            "timestamp": "2030-02-06 11:00:57",
+            "updated_orders": [
+              {
+                "meal_id": 3,
+                "order_id": 3,
+                "order_state": "pending",
+                "quantity": 1
+              },
+              {
+                "meal_id": 4,
+                "order_id": 4,
+                "order_state": "pending",
+                "quantity": 2
+              }
+            ]
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_delete": {
+        "orders": [
+          {
+            "order_id": 3,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 4,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "scheduling": "First transaction commits, second request deletes both tables, first response then resumes."
+    },
+    {
+      "case": "test_abandon_then_cancel_preserves_existing_pending_cancel_rule",
+      "identity": {
+        "buyer_id": 7,
+        "timestamp": "2030-03-23 02:30:24"
+      },
+      "responses": [
+        {
+          "operation": "abandon_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 7,
+            "deliverer_id": null,
+            "message": "已放棄承接訂單",
+            "success": true,
+            "timestamp": "2030-03-23 02:30:24",
+            "updated_orders": [
+              {
+                "meal_id": 5,
+                "order_id": 5,
+                "order_state": "pending",
+                "quantity": 1
+              },
+              {
+                "meal_id": 6,
+                "order_id": 6,
+                "order_state": "pending",
+                "quantity": 2
+              }
+            ]
+          }
+        },
+        {
+          "operation": "cancel_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 7,
+            "cancelled_orders": [
+              {
+                "meal_id": 5,
+                "order_id": 5,
+                "order_state": "cancelled",
+                "quantity": 1
+              },
+              {
+                "meal_id": 6,
+                "order_id": 6,
+                "order_state": "cancelled",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單取消成功",
+            "success": true,
+            "timestamp": "2030-03-23 02:30:24"
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 5,
+            "state": "CANCELLED"
+          },
+          {
+            "order_id": 6,
+            "state": "CANCELLED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "first_operation": "abandon_order",
+      "second_operation": "cancel_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_abandon_then_complete_rejects_stale_transition",
+      "identity": {
+        "buyer_id": 10,
+        "timestamp": "2030-06-21 22:59:43"
+      },
+      "responses": [
+        {
+          "operation": "abandon_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 10,
+            "deliverer_id": null,
+            "message": "已放棄承接訂單",
+            "success": true,
+            "timestamp": "2030-06-21 22:59:43",
+            "updated_orders": [
+              {
+                "meal_id": 7,
+                "order_id": 7,
+                "order_state": "pending",
+                "quantity": 1
+              },
+              {
+                "meal_id": 8,
+                "order_id": 8,
+                "order_state": "pending",
+                "quantity": 2
+              }
+            ]
+          }
+        },
+        {
+          "operation": "complete_order",
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 7,
+                "order_state": "pending"
+              },
+              {
+                "order_id": 8,
+                "order_state": "pending"
+              }
+            ],
+            "message": "訂單無法完成",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 7,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 8,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "first_operation": "abandon_order",
+      "second_operation": "complete_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_acceptance_response_survives_delete_after_commit",
+      "identity": {
+        "buyer_id": 13,
+        "timestamp": "2030-06-25 09:14:02"
+      },
+      "responses": [
+        {
+          "operation": "process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 13,
+            "deliverer_id": 14,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 9,
+                "order_id": 9,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 10,
+                "order_id": 10,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-06-25 09:14:02"
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_delete": {
+        "orders": [
+          {
+            "order_id": 9,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 10,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 14
+      },
+      "scheduling": "First transaction commits, second request deletes both tables, first response then resumes."
+    },
+    {
+      "case": "test_cancel_failure_returns_json_and_rolls_back_all_meals",
+      "identity": {
+        "buyer_id": 16,
+        "timestamp": "2030-05-27 10:54:57"
+      },
+      "responses": [
+        {
+          "operation": "cancel_order",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic lifecycle failure after real UPDATE",
+            "error_type": "RuntimeError",
+            "message": "取消訂單失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 11,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 12,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 17
+      },
+      "synthetic_failure_injection": true,
+      "updated_tables_before_failure": [
+        "ORDERS"
+      ]
+    },
+    {
+      "case": "test_cancel_then_abandon_does_not_resurrect_cancelled_order",
+      "identity": {
+        "buyer_id": 19,
+        "timestamp": "2030-02-21 18:03:15"
+      },
+      "responses": [
+        {
+          "operation": "cancel_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 19,
+            "cancelled_orders": [
+              {
+                "meal_id": 13,
+                "order_id": 13,
+                "order_state": "cancelled",
+                "quantity": 1
+              },
+              {
+                "meal_id": 14,
+                "order_id": 14,
+                "order_state": "cancelled",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單取消成功",
+            "success": true,
+            "timestamp": "2030-02-21 18:03:15"
+          }
+        },
+        {
+          "operation": "abandon_order",
+          "status": 409,
+          "body": {
+            "message": "只有所有訂單狀態皆為 PROCESSING 時，才能放棄承接",
+            "order_statees": [
+              {
+                "order_id": 13,
+                "order_state": "cancelled"
+              },
+              {
+                "order_id": 14,
+                "order_state": "cancelled"
+              }
+            ],
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 13,
+            "state": "CANCELLED"
+          },
+          {
+            "order_id": 14,
+            "state": "CANCELLED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 20
+      },
+      "first_operation": "cancel_order",
+      "second_operation": "abandon_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_cancel_then_complete_rejects_stale_transition",
+      "identity": {
+        "buyer_id": 22,
+        "timestamp": "2030-08-14 00:19:57"
+      },
+      "responses": [
+        {
+          "operation": "cancel_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 22,
+            "cancelled_orders": [
+              {
+                "meal_id": 15,
+                "order_id": 15,
+                "order_state": "cancelled",
+                "quantity": 1
+              },
+              {
+                "meal_id": 16,
+                "order_id": 16,
+                "order_state": "cancelled",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單取消成功",
+            "success": true,
+            "timestamp": "2030-08-14 00:19:57"
+          }
+        },
+        {
+          "operation": "complete_order",
+          "status": 409,
+          "body": {
+            "invalid_orders": [
+              {
+                "order_id": 15,
+                "order_state": "cancelled"
+              },
+              {
+                "order_id": 16,
+                "order_state": "cancelled"
+              }
+            ],
+            "message": "訂單無法完成",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 15,
+            "state": "CANCELLED"
+          },
+          {
+            "order_id": 16,
+            "state": "CANCELLED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 23
+      },
+      "first_operation": "cancel_order",
+      "second_operation": "complete_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_cancellation_response_survives_delete_after_commit",
+      "identity": {
+        "buyer_id": 25,
+        "timestamp": "2030-06-24 08:46:07"
+      },
+      "responses": [
+        {
+          "operation": "cancel_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 25,
+            "cancelled_orders": [
+              {
+                "meal_id": 17,
+                "order_id": 17,
+                "order_state": "cancelled",
+                "quantity": 1
+              },
+              {
+                "meal_id": 18,
+                "order_id": 18,
+                "order_state": "cancelled",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單取消成功",
+            "success": true,
+            "timestamp": "2030-06-24 08:46:07"
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_delete": {
+        "orders": [
+          {
+            "order_id": 17,
+            "state": "CANCELLED"
+          },
+          {
+            "order_id": 18,
+            "state": "CANCELLED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 26
+      },
+      "scheduling": "First transaction commits, second request deletes both tables, first response then resumes."
+    },
+    {
+      "case": "test_complete_failure_rolls_back_all_meals",
+      "identity": {
+        "buyer_id": 28,
+        "timestamp": "2030-03-26 01:03:57"
+      },
+      "responses": [
+        {
+          "operation": "complete_order",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic lifecycle failure after real UPDATE",
+            "error_type": "RuntimeError",
+            "message": "完成訂單失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 19,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 20,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 29
+      },
+      "synthetic_failure_injection": true,
+      "updated_tables_before_failure": [
+        "ORDERS"
+      ]
+    },
+    {
+      "case": "test_complete_then_abandon_rejects_stale_transition",
+      "identity": {
+        "buyer_id": 31,
+        "timestamp": "2030-06-25 13:49:47"
+      },
+      "responses": [
+        {
+          "operation": "complete_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 31,
+            "completed_orders": [
+              {
+                "meal_id": 21,
+                "order_id": 21,
+                "order_state": "completed",
+                "quantity": 1
+              },
+              {
+                "meal_id": 22,
+                "order_id": 22,
+                "order_state": "completed",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單完成",
+            "success": true,
+            "timestamp": "2030-06-25 13:49:47"
+          }
+        },
+        {
+          "operation": "abandon_order",
+          "status": 409,
+          "body": {
+            "message": "只有所有訂單狀態皆為 PROCESSING 時，才能放棄承接",
+            "order_statees": [
+              {
+                "order_id": 21,
+                "order_state": "completed"
+              },
+              {
+                "order_id": 22,
+                "order_state": "completed"
+              }
+            ],
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 21,
+            "state": "COMPLETED"
+          },
+          {
+            "order_id": 22,
+            "state": "COMPLETED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 32
+      },
+      "first_operation": "complete_order",
+      "second_operation": "abandon_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_complete_then_cancel_rejects_stale_transition",
+      "identity": {
+        "buyer_id": 34,
+        "timestamp": "2030-02-19 05:04:27"
+      },
+      "responses": [
+        {
+          "operation": "complete_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 34,
+            "completed_orders": [
+              {
+                "meal_id": 23,
+                "order_id": 23,
+                "order_state": "completed",
+                "quantity": 1
+              },
+              {
+                "meal_id": 24,
+                "order_id": 24,
+                "order_state": "completed",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單完成",
+            "success": true,
+            "timestamp": "2030-02-19 05:04:27"
+          }
+        },
+        {
+          "operation": "cancel_order",
+          "status": 409,
+          "body": {
+            "message": "訂單已完成或已取消，無法取消",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 23,
+            "state": "COMPLETED"
+          },
+          {
+            "order_id": 24,
+            "state": "COMPLETED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 35
+      },
+      "first_operation": "complete_order",
+      "second_operation": "cancel_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_completion_response_survives_delete_after_commit",
+      "identity": {
+        "buyer_id": 37,
+        "timestamp": "2030-07-18 21:49:52"
+      },
+      "responses": [
+        {
+          "operation": "complete_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 37,
+            "completed_orders": [
+              {
+                "meal_id": 25,
+                "order_id": 25,
+                "order_state": "completed",
+                "quantity": 1
+              },
+              {
+                "meal_id": 26,
+                "order_id": 26,
+                "order_state": "completed",
+                "quantity": 2
+              }
+            ],
+            "message": "訂單完成",
+            "success": true,
+            "timestamp": "2030-07-18 21:49:52"
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_delete": {
+        "orders": [
+          {
+            "order_id": 25,
+            "state": "COMPLETED"
+          },
+          {
+            "order_id": 26,
+            "state": "COMPLETED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 38
+      },
+      "scheduling": "First transaction commits, second request deletes both tables, first response then resumes."
+    },
+    {
+      "case": "test_delete_completed_preserves_existing_rule_and_removes_both_tables",
+      "identity": {
+        "buyer_id": 40,
+        "timestamp": "2030-07-05 17:24:04"
+      },
+      "responses": [
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 0,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "initial_state": "COMPLETED",
+      "before": {
+        "orders": [
+          {
+            "order_id": 27,
+            "state": "COMPLETED"
+          },
+          {
+            "order_id": 28,
+            "state": "COMPLETED"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 41
+      },
+      "note": "Preserves existing deletion eligibility; this does not approve a business rule."
+    },
+    {
+      "case": "test_delete_failure_after_flush_rolls_back_both_tables",
+      "identity": {
+        "buyer_id": 43,
+        "timestamp": "2030-01-08 09:57:04"
+      },
+      "responses": [
+        {
+          "operation": "delete_order",
+          "status": 500,
+          "body": {
+            "error_message": "synthetic deletion commit failure after both tables were flushed",
+            "error_type": "RuntimeError",
+            "message": "刪除訂單時發生錯誤",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 29,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 30,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 44
+      },
+      "synthetic_failure_injection": true,
+      "deleted_tables_before_commit_failure": [
+        "DELIVERY",
+        "ORDERS"
+      ]
+    },
+    {
+      "case": "test_delete_pending_removes_orders_and_delivery_together",
+      "identity": {
+        "buyer_id": 46,
+        "timestamp": "2030-08-10 18:09:14"
+      },
+      "responses": [
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 0,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "initial_state": "PENDING",
+      "before": {
+        "orders": [
+          {
+            "order_id": 31,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 32,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "note": "Preserves existing deletion eligibility; this does not approve a business rule."
+    },
+    {
+      "case": "test_delete_processing_preserves_existing_rule_and_removes_both_tables",
+      "identity": {
+        "buyer_id": 49,
+        "timestamp": "2030-01-29 04:27:59"
+      },
+      "responses": [
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 0,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "initial_state": "PROCESSING",
+      "before": {
+        "orders": [
+          {
+            "order_id": 33,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 34,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 50
+      },
+      "note": "Preserves existing deletion eligibility; this does not approve a business rule."
+    },
+    {
+      "case": "test_delete_then_delivery_creation_cannot_leave_orphan_delivery",
+      "identity": {
+        "buyer_id": 52,
+        "timestamp": "2030-04-19 10:30:18"
+      },
+      "responses": [
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "add_new_delivery",
+          "status": 404,
+          "body": {
+            "message": "找不到對應的訂單",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "first_operation": "delete_order",
+      "second_operation": "add_new_delivery",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_delivery_creation_response_survives_delete_after_commit",
+      "identity": {
+        "buyer_id": 55,
+        "timestamp": "2030-03-22 04:14:57"
+      },
+      "responses": [
+        {
+          "operation": "add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 55,
+              "deliverer_id": null,
+              "pickup_address": "生命週期測試地址（合成資料）",
+              "timestamp": "2030-03-22 04:14:57"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "committed_before_delete": {
+        "orders": [
+          {
+            "order_id": 37,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 38,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "scheduling": "First transaction commits, second request deletes both tables, first response then resumes."
+    },
+    {
+      "case": "test_delivery_creation_then_acceptance_uses_current_delivery",
+      "identity": {
+        "buyer_id": 58,
+        "timestamp": "2030-05-04 12:40:51"
+      },
+      "responses": [
+        {
+          "operation": "add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 58,
+              "deliverer_id": null,
+              "pickup_address": "生命週期測試地址（合成資料）",
+              "timestamp": "2030-05-04 12:40:51"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 58,
+            "deliverer_id": 59,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 39,
+                "order_id": 39,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 40,
+                "order_id": 40,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-05-04 12:40:51"
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 39,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 40,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 59
+      },
+      "first_operation": "add_new_delivery",
+      "second_operation": "process_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_delivery_creation_then_delete_removes_current_delivery",
+      "identity": {
+        "buyer_id": 61,
+        "timestamp": "2030-06-11 08:55:22"
+      },
+      "responses": [
+        {
+          "operation": "add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 61,
+              "deliverer_id": null,
+              "pickup_address": "生命週期測試地址（合成資料）",
+              "timestamp": "2030-06-11 08:55:22"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "delete_order",
+          "status": 200,
+          "body": {
+            "deleted_count": 2,
+            "message": "訂單刪除成功",
+            "success": true
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [],
+        "delivery_exists": false,
+        "deliverer_id": null
+      },
+      "first_operation": "add_new_delivery",
+      "second_operation": "delete_order",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_duplicate_delivery_creation_is_serialized",
+      "identity": {
+        "buyer_id": 64,
+        "timestamp": "2030-01-08 14:37:46"
+      },
+      "responses": [
+        {
+          "operation": "add_new_delivery",
+          "status": 201,
+          "body": {
+            "delivery": {
+              "buyer_id": 64,
+              "deliverer_id": null,
+              "pickup_address": "生命週期測試地址（合成資料）",
+              "timestamp": "2030-01-08 14:37:46"
+            },
+            "message": "外送需求建立成功",
+            "success": true
+          }
+        },
+        {
+          "operation": "add_new_delivery",
+          "status": 409,
+          "body": {
+            "error_message": "(pymysql.err.IntegrityError) (1062, \"Duplicate entry '64-2030-01-08 14:37:46' for key 'delivery.PRIMARY'\")\n[SQL: INSERT INTO delivery (buyer_id, timestamp, deliverer_id, pickup_address) VALUES (%(buyer_id)s, %(timestamp)s, %(deliverer_id)s, %(pickup_address)s)]\n[parameters: {'buyer_id': 64, 'timestamp': datetime.datetime(2030, 1, 8, 14, 37, 46), 'deliverer_id': None, 'pickup_address': '生命週期測試地址（合成資料）'}]\n(Background on this error at: https://sqlalche.me/e/21/gkpj)",
+            "error_type": "IntegrityError",
+            "message": "資料庫資料寫入失敗",
+            "success": false
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 43,
+            "state": "PENDING"
+          },
+          {
+            "order_id": 44,
+            "state": "PENDING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": null
+      },
+      "first_operation": "add_new_delivery",
+      "second_operation": "add_new_delivery",
+      "distinct_mysql_connections": 2,
+      "second_waited_for_first_transaction": true
+    },
+    {
+      "case": "test_reaccept_reads_current_delivery_after_earlier_user_snapshot",
+      "identity": {
+        "buyer_id": 67,
+        "timestamp": "2030-04-19 11:04:58"
+      },
+      "responses": [
+        {
+          "operation": "abandon_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 67,
+            "deliverer_id": null,
+            "message": "已放棄承接訂單",
+            "success": true,
+            "timestamp": "2030-04-19 11:04:58",
+            "updated_orders": [
+              {
+                "meal_id": 45,
+                "order_id": 45,
+                "order_state": "pending",
+                "quantity": 1
+              },
+              {
+                "meal_id": 46,
+                "order_id": 46,
+                "order_state": "pending",
+                "quantity": 2
+              }
+            ]
+          }
+        },
+        {
+          "operation": "process_order",
+          "status": 200,
+          "body": {
+            "buyer_id": 67,
+            "deliverer_id": 69,
+            "message": "訂單承接成功",
+            "processed_orders": [
+              {
+                "meal_id": 45,
+                "order_id": 45,
+                "order_state": "processing",
+                "quantity": 1
+              },
+              {
+                "meal_id": 46,
+                "order_id": 46,
+                "order_state": "processing",
+                "quantity": 2
+              }
+            ],
+            "success": true,
+            "timestamp": "2030-04-19 11:04:58"
+          }
+        }
+      ],
+      "committed_database_state": {
+        "orders": [
+          {
+            "order_id": 45,
+            "state": "PROCESSING"
+          },
+          {
+            "order_id": 46,
+            "state": "PROCESSING"
+          }
+        ],
+        "delivery_exists": true,
+        "deliverer_id": 69
+      },
+      "user_snapshot_created_before_abandon_commit": true
+    }
+  ]
+}
