@@ -149,7 +149,7 @@ def main():
         summary = {
             "run_id": run_id, "completed_at": datetime.now(timezone.utc).isoformat(),
             "passed": browser_process.returncode == 0 and report.get("passed") is True
-                      and len(snapshots) == 4 and all(item["passed"] for item in snapshots),
+                      and len(snapshots) == 5 and all(item["passed"] for item in snapshots),
             "browser_cases": {"passed": report.get("passed_cases"), "total": report.get("total")},
             "browser_response_audit": report.get("audit"),
             "metadata": seed["metadata"], "playwright_version": package["version"],
