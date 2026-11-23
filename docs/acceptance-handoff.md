@@ -1,8 +1,8 @@
 # 接單模組交接素材
 
-11/23 補充：接單大廳已加入 15 秒定時更新，待接和已接清單都會自動重查。這次的操作方式、測試和截圖放在[定時更新紀錄](acceptance-auto-refresh.md)，下方保留前幾次交付時的資料。
+11/23 補充：接單大廳已加入 15 秒定時更新，待接和已接清單都會自動重查。操作方式、測試和截圖見[定時更新紀錄](acceptance-auto-refresh.md)。以下整理 11/14～11/15 的設計與測試紀錄。
 
-負責人：盧益甫。需求對應：`DS-US-06 Take orders`、`FR-DLV-01`。我把接單模組的介面、測試結果和限制整理在這份文件，方便組長整合設計文件，也讓同學能接著測試。
+負責人：盧益甫。需求對應：`DS-US-06 Take orders`、`FR-DLV-01`。這份文件整理接單模組的介面、資料模型、測試結果與尚未完成的部分。
 
 我在 2026-11-14 跑的 MySQL 自動測試 **10/10 通過**，包含 10 輪競爭接單及雙表更新後的 rollback；前端補強 QA **16/16 通過、0 頁面錯誤**，typecheck／build 也通過。字幕 Demo 共 52.44 秒，包含原本 36.44 秒的操作和 2026-11-15 補錄的 16 秒資料庫查詢。測試紀錄和範圍見[驗收對照表](acceptance-checklist.md)，沒有把 PR 作者先前的測試敘述算進來。
 
@@ -10,7 +10,7 @@
 
 設計 PDF：[本次已接清單與影片補充](接單設計與測試-更新版.pdf)，原本的 [API 與設計素材](接單設計與驗收素材.pdf)也保留。各版影片與講稿見 [Demo 素材](acceptance-demo.md)。
 
-11/15 晚上檢查資料庫後又補了一批修正：同秒下單不再混單，接單與其他狀態操作會鎖定資料再判斷，刪除會一起處理 Orders 和 Delivery，回應也不會因提交後資料被刪除而誤報失敗。本輪後端 50/50、雙頁聯測 8/8、前端回應與版面 13/13 都通過，四張資料庫查詢一致。給組長的修正明細與待確認規則放在 [bug 檢查紀錄](acceptance-bug-review.md)；上面的 PDF 與影片保留錄製當輪的內容。
+11/15 晚上檢查資料庫後又補了一批修正：同秒下單不再混單，接單與其他狀態操作會鎖定資料再判斷，刪除會一起處理 Orders 和 Delivery，回應也不會因提交後資料被刪除而誤報失敗。本輪後端 50/50、雙頁聯測 8/8、前端回應與版面 13/13 都通過，四張資料庫查詢一致。修正明細與未定規則見 [bug 檢查紀錄](acceptance-bug-review.md)；上面的 PDF 與影片保留錄製當輪的內容。
 
 ## 來源與個人範圍
 
@@ -24,9 +24,9 @@
 
 我主要確認接單按鈕是否送出正確資料、同單所有餐點是否一起更新，以及資料庫記錄的外送員是否就是接單成功的人。也測了重複接單、成功與衝突提示、載入錯誤。大廳和接單 API 以同學原本的成果為基礎，我接著補互動、測試，以及這次實際重現的交易問題。
 
-買家端 `App.vue` 仍使用舊餐廳／下單 API，完整點餐流程還要由團隊整合。我這次負責接單模組，不包含完成訂單、付款、退款、聊天和全組 SDD。示範用外送員 ID 是從測試資料選出的使用者，**登入、身分驗證和角色權限尚未完成**。
+買家端 `App.vue` 仍使用舊餐廳／下單 API，尚未串接接單流程。本模組的實作範圍是接單，不包含完成訂單、付款、退款和聊天。示範用外送員 ID 是從測試資料選出的使用者，**登入、身分驗證和角色權限尚未完成**。
 
-11/15 補充的雙頁聯測、下單錯誤修正和待串接事項，整理在[接單聯測與後續串接](acceptance-integration.md)，組長更新設計文件時可一起參考。
+11/15 補充的雙頁聯測、下單錯誤修正和待串接事項，整理在[接單聯測與後續串接](acceptance-integration.md)。
 
 ## 接單 API（SDD 第 2 章）
 
@@ -52,7 +52,7 @@
 
 後端的角色檢查目前被註解掉，接單路由沒有有效的「不是外送員即回 `403`」分支。現在只確認使用者存在，還沒有檢查登入或角色授權。
 
-舊分工文件的 `/api/orders/:id/accept` 與 `Pending → Delivering` 是早期名稱。我這次依目前程式，對接 `/api/process_order` 與 `PENDING → PROCESSING`，組長更新 SDD 時也需要一起改。
+舊分工文件的 `/api/orders/:id/accept` 與 `Pending → Delivering` 是早期名稱；目前程式使用 `/api/process_order` 與 `PENDING → PROCESSING`。
 
 ## 資料與整單識別（SDD 第 5、6 章）
 
@@ -68,7 +68,7 @@
 
 `OrderState` 在程式中定義 `IN_CART`、`PENDING`、`PROCESSING`、`COMPLETED`、`CANCELLED`，API 透過 `.value` 輸出對應小寫字串。實際模型使用 Enum，不採 HackMD ER 圖中的整數欄位描述；備註欄位實際名稱是 `note`。
 
-以下類別圖可放進 SDD 第 6 章，整理的是實際 SQLAlchemy 模型與重要欄位。實線關係對應目前外鍵；`Delivery` 的 `deliverer_id` 可為 `null`，表示這筆外送紀錄還沒指定外送員。
+以下類別圖整理實際 SQLAlchemy 模型與重要欄位。實線關係對應目前外鍵；`Delivery` 的 `deliverer_id` 可為 `null`，表示這筆外送紀錄還沒指定外送員。
 
 ```mermaid
 classDiagram
@@ -112,7 +112,7 @@ classDiagram
     Users "0..1" --> "0..*" Delivery : deliverer_id
 ```
 
-`Delivery` 的複合主鍵是 `(buyer_id, timestamp)`；API 用這兩個欄位查詢同單 `Orders`，但模型**沒有 Orders 指向 Delivery 的複合外鍵**，所以圖中不畫這條資料庫關聯。`process_order()` 是 Flask 路由函式，不是獨立 service 類別。這張圖只包含接單相關模型，整組類別設計還要另外整合。
+`Delivery` 的複合主鍵是 `(buyer_id, timestamp)`；API 用這兩個欄位查詢同單 `Orders`，但模型**沒有 Orders 指向 Delivery 的複合外鍵**，所以圖中不畫這條資料庫關聯。`process_order()` 是 Flask 路由函式，不是獨立 service 類別。這張圖只包含接單相關模型。
 
 ## 接單流程（SDD 第 3 章）
 
@@ -170,7 +170,7 @@ stateDiagram-v2
     end note
 ```
 
-這張圖從下單後開始；`IN_CART` 不是可接單狀態。完成、棄單與取消是原本就有的程式路徑，我把它們放進圖裡說明前後關係，沒有列為這次新增的成果。現有取消介面還沒有付款／退款流程，取消權限和賠償規則也還沒由團隊決定。
+這張圖從下單後開始；`IN_CART` 不是可接單狀態。完成、棄單與取消是原本就有的程式路徑，我把它們放進圖裡說明前後關係，沒有列為這次新增的成果。現有取消介面尚未實作付款／退款流程，取消權限和賠償規則也尚未定義。
 
 ## 前端與示範素材（SDD 第 1、4、7 章）
 
@@ -199,22 +199,20 @@ stateDiagram-v2
 
 2026-11-15 我另外補錄了查詢畫面，在瀏覽器按下查詢，讀取原 Demo schema `ntou_acceptance_demo_20261114_b8877ae024`。買家 `1` 的餐點明細 `1`、`2` 都由外送員 `2` 接下，買家 `4` 的餐點明細 `3` 由外送員 `3` 接下，三筆都是 `PROCESSING`。[SQL](evidence/demo-database-query.sql)、[查詢結果](evidence/browser/demo-database-query.json)和[截圖](evidence/browser/demo-database-query.png)另附。補錄只讀 MySQL，沒有重新接單；影片已標明補錄日期，並非原操作後連續拍攝。
 
-大廳金額目前只是餐點單價乘數量後加總，沒有包含外送費或外送員報酬，也不能用來判斷是否已收款。`pickup_address` 的欄位名稱與畫面的「送餐地址」用詞不同，這部分還要和團隊確認。
+大廳金額目前只是餐點單價乘數量後加總，沒有包含外送費或外送員報酬，也不能用來判斷是否已收款。`pickup_address` 的欄位名稱與畫面的「送餐地址」用詞尚未統一。
 
 目前用 Vue／TypeScript 做前端、Flask 做後端，透過 SQLAlchemy／PyMySQL 連接 MySQL，開發時使用 Vite proxy。我這次的環境是 Node `22.22.2`、Python `3.13.2`、MySQL Community `8.0.46`／InnoDB、Flask `3.1.3`、Flask-SQLAlchemy `3.1.1`、SQLAlchemy `2.1.8`、PyMySQL `1.2.4`、python-dotenv `1.2.4`。完整 Python 套件版本列於 [requirements-lock.txt](../backend/requirements-lock.txt)，[相容性檢查](evidence/python-dependencies.log)確認 19 個套件相容。
 
-## 設計議題與待團隊確認事項（SDD 第 8 章）
+## 設計議題與未定規則（SDD 第 8 章）
 
 | 議題與背景 | 目前程式／待確認內容 | 還需要處理的部分 |
 | --- | --- | --- |
 | 重複接單與狀態競爭 | 以 PR #1 行鎖為基礎，補上 Delivery 的鎖定讀取及其他狀態操作的行鎖；本輪 10 輪雙人接單皆一個成功、一個衝突 | 已補部分取消／完成／棄單交錯測試；遲到的舊操作者請求還需要身分與版本檢查，見 bug 檢查紀錄 |
-| 身分與權限 | `deliverer_id` 由前端傳入；角色檢查未啟用，路由未從登入 session 取得使用者。正式驗證方式、是否可接自己的單須由團隊決定 | Demo 身分不等於登入功能，授權規則要一起討論 |
+| 身分與權限 | `deliverer_id` 由前端傳入；角色檢查未啟用，路由未從登入 session 取得使用者 | 登入驗證與角色授權尚未串接，是否允許接自己的訂單也尚未定義 |
 | 同一買家在同一秒下兩單 | 以秒級 `(buyer_id, timestamp)` 分組；現在第二次請求回 `409`，不再把餐點合併 | 若要同秒兩張都成功，需要另訂整單識別方式，這次未改 schema |
-| 取消／退款及例外 | 現有 API 有取消與棄單，但付款、退款、已購餐後取消、無人接單、顧客未收餐的規則未定 | 依老師回饋補上需求討論；現有狀態更新還不足以涵蓋完整規則 |
-| 刪單規則 | 已確認組內尚未約定；這次保留原有可刪狀態，已修好 Orders 與 Delivery 成對刪除及失敗回滾 | 請組長確認哪些狀態可刪、誰能刪，以及是否需要保留訂單紀錄 |
+| 取消／退款及例外 | 現有 API 有取消與棄單，但付款、退款、已購餐後取消、無人接單、顧客未收餐的規則未定 | 現有狀態更新尚未涵蓋這些情況的完整處理方式 |
+| 刪單規則 | 保留原有可刪狀態，已修好 Orders 與 Delivery 成對刪除及失敗回滾 | 可刪除的狀態、操作者權限與訂單紀錄保留方式尚未定義 |
 | 地址及金額含義 | `pickup_address` 與前端顯示用詞不一致；大廳金額只有餐點小計 | 目前只展示地址和餐點小計，沒有展示取送兩地、外送費計算或付款功能 |
-
-組長可以用這張表整理 Issue、Context、Alternatives、Decision and Rationale、Consequences。還沒決定的項目先保留，等團隊討論後再補方案和理由。
 
 ## 測試紀錄與檔案
 
@@ -223,7 +221,7 @@ stateDiagram-v2
 | 測試當時的原始碼 | 2026-11-14 以 PR #1 head `bb80ed42ba398f3bf801aebdc127b7fdfdaebf3e` 加上當時尚未提交的更動測試；報告另記錄實際檔案 SHA-256。這是當時的來源，報告中的 HEAD 不代表目前分支版本 |
 | MySQL 環境 | `127.0.0.1:3307`、MySQL `8.0.46`／InnoDB；schema `ntou_acceptance_test_20261114_20bce73066`，合成資料保留，可回頭確認測試結果 |
 | 後端測試 | 10/10 通過；10 輪競爭、整單持久化、錯誤拒絕、時間戳與雙表更新後 rollback，詳見驗收對照表 |
-| 重跑方式 | [acceptance-runbook.md](acceptance-runbook.md)：我的 Mac 使用現有 runtime，同學則可自備 MySQL |
+| 重跑方式 | [acceptance-runbook.md](acceptance-runbook.md)：環境準備、MySQL 設定與測試指令 |
 | 11/14 typecheck／build | [build 日誌](evidence/frontend-build.log)通過，Vite `8.3.4`，含 `dist/driver.html` |
 | 瀏覽器與 DB | 上述七步流程通過；兩張訂單的資料庫狀態與畫面結果一致 |
 | 前端補強 QA | [16/16 報告](evidence/browser/qa-results.json)，0 頁面錯誤；真實接單、單頁防連點與注入錯誤分開標示 |
@@ -233,12 +231,12 @@ stateDiagram-v2
 | 舊版 Demo 影片 | [接單功能Demo-含資料庫查詢.mp4](evidence/demo-captioned.mp4)，52.44 秒、1280×900、H.264；前 36.44 秒為原操作，後 16 秒為 2026-11-15 補錄的唯讀 MySQL 查詢。已逐段檢查字幕與畫面，時間軸與講稿見 [Demo 素材](acceptance-demo.md) |
 | 合成示範資料 | 每次 `seed` 建立新 schema 並輸出實際 ID；示範身分不代表登入功能 |
 
-完整驗收條件見 [acceptance-checklist.md](acceptance-checklist.md)。我整理的是接單模組的測試紀錄和限制，讓組長整合 SDD、Trello 與展示內容。全組是否達到 40% 實作，還要合併其他模組一起確認。
+完整驗收條件見 [acceptance-checklist.md](acceptance-checklist.md)。
 
 ## 參考來源
 
 - [個人分工](https://hackmd.io/Sl7qt7ewRpGaD5GuaYrxdA)：負責人 5、工作 5-1／5-2。
 - [SRD](https://hackmd.io/jziZSyfFSMqihvgTeEMICQ)：`DS-US-06`、`FR-DLV-01`。
 - [API 說明](https://hackmd.io/FsQpIO76RKuHLvQURuRMJQ)與[資料庫架構](https://hackmd.io/sku3OVPZQWGYkWZDUXYkIA)：團隊原有文件；這裡的欄位和狀態碼已依原始碼與測試結果核對。
-- [SDD 範本](https://hackmd.io/@ldhxSaJmSG-Jmp2kxBS7mA/S1RJ_PP1-e)：各節已標出可放入的章節，全組設計文件仍由組長整合。
+- [SDD 範本](https://hackmd.io/@ldhxSaJmSG-Jmp2kxBS7mA/S1RJ_PP1-e)：各節已標出對應章節。
 - 原始碼：[backend/server.py](../backend/server.py)、[backend/utils.py](../backend/utils.py)、[DriverLobby.vue](../frontend/src/components/DriverLobby.vue)。

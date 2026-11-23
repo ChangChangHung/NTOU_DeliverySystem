@@ -71,20 +71,20 @@
 
 完整紀錄：[後端測試](evidence/integration-20261115/mysql-results.json)、[瀏覽器測試](evidence/integration-20261115/browser-results.json)、[獨立資料庫查詢](evidence/integration-20261115/integration-results.json)。兩個頁面的結果可看 [#2 的畫面](evidence/integration-20261115/compete-0.png)和 [#3 的畫面](evidence/integration-20261115/compete-1.png)。
 
-## 還需要和組員接的地方
+## 11/15 串接狀況與介面需求
 
-| 項目 | 目前狀況 | 下一步怎麼配合 |
+| 項目 | 當時狀況 | 串接需求與檢查項目 |
 | --- | --- | --- |
-| 登入後的身分與角色 | 接單頁還是使用 `VITE_DELIVERER_ID`；後端接單 API 也還沒驗證登入身分與外送員權限。 | 等登入負責人提供實際取得 `user_id`、目前角色和驗證登入的方式，我再把接單端接上，測未登入、非外送員及身分切換。 |
-| 買家介面到接單大廳 | `App.vue` 仍呼叫 `/api/restaurants`、`/api/restaurants/:id/menu`、`/api/orders`，目前 Flask 沒有這三條路由。張弘勳 10/16 說明的點餐、購物車介面可以沿用，但還要接現有資料庫 API。 | 由買家端負責人接回現有 API；我這邊配合確認下單後能在大廳看到、接成功後整單狀態正確。這次已先驗證後端建單、建立外送資料到接單的流程。 |
-| 接到單以後的訂單頁 | 大廳已顯示自己的 `processing` 訂單與餐點；尚未加入配送進度與完成操作。 | 與訂單追蹤／完成頁負責人約定入口，沿用 `buyer_id + timestamp`，再一起測後續狀態與操作。 |
-| 大廳自動更新 | 現在進頁面、手動重新整理和接單結束時會讀最新清單，尚未自動更新別人新下或接走的單。 | 和周君諺確認大廳的更新方式；我負責確認更新不會造成接單重送，舊卡片仍能正確處理 `409`。 |
+| 登入後的身分與角色 | 接單頁使用 `VITE_DELIVERER_ID`；後端接單 API 尚未驗證登入身分與外送員權限。 | 登入資訊需提供 `user_id`、目前角色及驗證方式；測試需涵蓋未登入、非外送員及身分切換。 |
+| 買家介面到接單大廳 | `App.vue` 呼叫 `/api/restaurants`、`/api/restaurants/:id/menu`、`/api/orders`，Flask 沒有這三條路由。既有點餐與購物車介面尚未接上資料庫 API。 | 買家頁需改接現有 API，確認下單後出現在大廳、接成功後整單狀態正確。本輪已驗證後端建單、建立外送資料到接單的流程。 |
+| 接到單以後的訂單頁 | 大廳已顯示自己的 `processing` 訂單與餐點；尚未加入配送進度與完成操作。 | 訂單頁沿用 `buyer_id + timestamp` 識別整單，需確認頁面入口、後續狀態與完成操作。 |
+| 大廳自動更新 | 11/15 版本只在進頁面、手動重新整理和接單結束時讀最新清單。 | 更新不能造成接單重送，舊卡片仍須正確處理 `409`。 |
 
 接單端目前認整張訂單的方式是 **`buyer_id + timestamp`**。買家端要先呼叫 `POST /api/add_new_order`，再用回傳的 timestamp 呼叫 `POST /api/add_new_delivery`，外送資料建立好才會出現在大廳。時間直接沿用回傳值，不要在前端重新產生或轉時區。
 
-`POST /api/process_order` 送 `buyer_id`、`timestamp`、`deliverer_id`，成功後所有餐點都變成 `processing`，Delivery 記錄承接的外送員。查詢用 `POST /api/view_meals_of_order` 和 `POST /api/view_delivery`，同樣帶 `buyer_id + timestamp`；取餐／送餐地址和外送費的名稱、規則，仍要和相關組員對齊。
+`POST /api/process_order` 送 `buyer_id`、`timestamp`、`deliverer_id`，成功後所有餐點都變成 `processing`，Delivery 記錄承接的外送員。查詢用 `POST /api/view_meals_of_order` 和 `POST /api/view_delivery`，同樣帶 `buyer_id + timestamp`；取餐／送餐地址的定義和外送費計算規則尚未統一。
 
-禁止接自己的單、自取及取消／棄單的規則，先依組內討論決定。後續在 11/15 晚上的 [bug 檢查](acceptance-bug-review.md)補測了交易交錯，修正行鎖、舊快照和回應時機，但沒有新增取消／刪單的業務規則。
+是否允許接自己的單、自取及取消／棄單的規則尚未定義。11/15 晚上的 [bug 檢查](acceptance-bug-review.md)補測了交易交錯，修正行鎖、舊快照和回應時機，但沒有新增取消／刪單的業務規則。
 
 ## 重跑這次聯測
 
