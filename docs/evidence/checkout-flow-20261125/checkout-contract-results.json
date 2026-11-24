@@ -1,0 +1,1605 @@
+{
+  "completed_at": "2026-11-24T21:13:44.476Z",
+  "frontend_origin": "http://127.0.0.1:5194",
+  "mode": "mock_api",
+  "note": "所有 API 都由測試攔截，不會建立或修改遠端資料。",
+  "passed": true,
+  "passed_count": 20,
+  "total": 20,
+  "cases": [
+    {
+      "name": "餐廳與菜單使用既有資料庫欄位",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 160,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "購物車重整後保留，減到零會移除",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 278,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "空地址不能下單，地址輸入限制為 120 字",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 151,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "以餐點列的時間建立外送資料，成功後轉到訂單頁",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 231,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "同時間混入別筆餐點時停止補建外送資料",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 250,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "地址已寫入但回應遺失，讀回後完成下單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 200,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "地址寫入失敗後重整，只重試外送資料",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 274,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "建單回應遺失時保留待確認狀態，不再送出",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 196,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "建單回傳 500 時不假設沒有寫入",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 210,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "建單回傳 HTML 404 時仍保留待確認紀錄",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 194,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "送單期間連點不會再建立一張訂單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 615,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "同一買家的兩個分頁同時下單，只建立一張訂單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 987,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/add_new_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01",
+            "pickup_address": "校門口測試交餐點"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    },
+    {
+      "name": "買家頁餐點讀取失敗時保留清單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 245,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "買家頁外送資料讀取失敗時保留清單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 304,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "買家頁完成訂單只送出一次，重讀後顯示已完成",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 556,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/complete_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "外送員頁餐點讀取失敗時保留清單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 252,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "外送員頁外送資料讀取失敗時保留清單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 318,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "外送員頁完成訂單只送出一次，重讀後顯示已完成",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 526,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/complete_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "取消後保留原外送員，兩邊都能查看但不能再操作",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 141,
+      "requests": [
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        }
+      ]
+    },
+    {
+      "name": "待確認下單可由使用者查看紀錄後歸檔，不會重送或刪單",
+      "passed": true,
+      "mode": "mock_api",
+      "duration_ms": 618,
+      "requests": [
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/add_new_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "meals": [
+              {
+                "meal_id": 101,
+                "quantity": 1,
+                "note": null
+              }
+            ]
+          }
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_order_by_stamp",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_meals_of_order",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_delivery",
+          "method": "POST",
+          "body": {
+            "buyer_id": 2,
+            "timestamp": "2026-11-25 09:00:01"
+          }
+        },
+        {
+          "path": "/api/view_all_restaurants",
+          "method": "GET"
+        },
+        {
+          "path": "/api/view_all_meals",
+          "method": "GET"
+        }
+      ]
+    }
+  ]
+}

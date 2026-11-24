@@ -408,6 +408,10 @@ onBeforeUnmount(() => {
 <template>
   <div class="page">
     <h1>外送員接單大廳</h1>
+    <nav class="page-links" aria-label="頁面導覽">
+      <a href="/deliverer-orders.html">我的外送單</a>
+      <a href="/">返回點餐</a>
+    </nav>
     <p class="demo-account" v-if="validDeliverer">示範帳號：外送員 #{{ DELIVERER_ID }}（尚未串接登入）</p>
     <p class="notice error-notice" v-else>示範外送員帳號設定無效，請確認 VITE_DELIVERER_ID 是正整數。</p>
 
@@ -530,6 +534,9 @@ h1 {
   font-size: 14px;
   text-align: center;
 }
+
+.page-links { display: flex; justify-content: center; gap: 20px; margin: 12px 0; }
+.page-links a { color: #37506a; }
 
 .notice.success { color: #215c36; }
 .notice.error, .error-notice { color: #992e25; }

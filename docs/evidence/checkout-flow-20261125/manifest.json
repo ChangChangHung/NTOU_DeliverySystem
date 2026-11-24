@@ -1,0 +1,46 @@
+{
+  "assembled_at": "2026-11-24T21:22:39.614519+00:00",
+  "source_files": {
+    "frontend/src/App.vue": "0a0e648eb42953e30698d55b40903afe96f37f1789ef50858edbff6b8410afd0",
+    "frontend/src/lib/checkout.ts": "222008bba558517faa87c9fd946765e0de3049005907bdbeddc89bfcf0dc87ca",
+    "frontend/src/lib/orderTracking.ts": "8d9ee757d628a27bb975c96f20ed5764efa1cd8921650a1dbc81f2f4e053ab00",
+    "frontend/src/components/BuyerOrders.vue": "cc0a4ae4422637d5f2ba57bce87708d02154b300490ee1aa5696c1b0ba2555d0",
+    "frontend/src/components/DelivererOrders.vue": "7070f3b55304393db881029f81e2b51f7768ef3fc73636779e56dc2d19be7a63",
+    "frontend/src/components/DriverLobby.vue": "dc4dc739bc6662098de0f5cb60199ace742c99b495eab384c4e12352ce074139",
+    "frontend/src/assets/main.css": "2680a1608dfe52ede433cc2f4f3141158fc38c47cc7126fcb8bc13c7f5ab9dff",
+    "frontend/tests/checkout-contract.mjs": "395a3ad26c224005185af97e9605200fc741986b55b3a2f785c93614681ad2cf",
+    "frontend/tests/record-checkout-flow.mjs": "2d0b3a31659dc1c8f04343b443536df298ce00b2b70ed9098b5dbd4ab109c797",
+    "backend/scripts/local_checkout_demo.py": "3831e25e783729dd6f4a5ebe438590c60b2a5925d9473f4a0b98a05639d14df5"
+  },
+  "evidence_files": {
+    "01-cart.jpg": "538603f75326090e55a49e3ff8b925ba0feb9d8700104200ebd410a5c4f7bdc3",
+    "03-auto-new-orders.jpg": "8cf8ea9e051051ad9b49408ca6105a5668398842c050181b1c98a6805712bd65",
+    "04-duplicate-red.jpg": "c5e8cc4b0d796db0062e9113c5a7f6ea5d8a76bf5042776843abfc186362d8c9",
+    "05-own-orders.jpg": "57acb67e3a3ef5c1b438f859a52963623c91d5b1757223f9852b5fc3bd2913e5",
+    "06-api-records.jpg": "ba46d48ef30964c0021175b5e36716bb52fb93ed03d5bebf5913ba6c4b4e603a",
+    "07-return-to-pending.jpg": "3b5dbf77b85ab8e61cd39724016ce24c4b8a8474a72389f43012367053fd089e",
+    "09-buyer-complete.jpg": "c595bfd3ad00b3712767f8fa4a393c4182de0e1383b1c0d9e5c492ed9ba80a66",
+    "10-completion-sync.jpg": "59fe2bdead883a323d1fd9aaa8c36e585dd830eed751137edf6db06fba842cd1",
+    "11-final-query.jpg": "a38522b7d886bd61533619837bbd521e682a9afe699a5ff4f416fe456fc6b9f5",
+    "build.log": "6bf2c29de025dd9fb324d7c71a254c285a230f94eaec51a0f3ea7d2e192c562c",
+    "checkout-contract-results.json": "e387dd44df17316a44e18b2ee8828e21c97f9a24ec0bf6c35b1643f1e4460627",
+    "flow-results.json": "5a862ad797f6e1503a5d3cd9c93603d2c4a7bcfbd3d96cf7f02857ac61f3269d",
+    "local-flow-results.json": "c5d095e1c4cc8eb772a77fa1306ec115ad9162030bb49815b260e79bb1828bb2",
+    "original-data-verification.json": "fb241eb886eecd9c940db47fa78d00dfaef5091e4b3be30985339542288c0597",
+    "polling-results.json": "1b534f01582d66d0418188169341d4df207c085c01b8104911b2c7e5464752ac",
+    "timestamp-mismatch.json": "98f8382df7c72f448a84014ec5cf3f0db8d55b6e5e184e9420a20fc4fdcf501b",
+    "點餐到接單完整測試.mp4": "c24c85fbbf5c96f700d6300030170cedec663e178cfca329618e9f9cc2c13581"
+  },
+  "video": {
+    "duration_seconds": 148.64,
+    "width": 1920,
+    "height": 1080,
+    "codec": "h264"
+  },
+  "scope": {
+    "frontend": "localhost Vite",
+    "backend": "teammate Flask via bounded test proxy",
+    "remote_direct_database_access": false,
+    "remote_simultaneous_acceptance_tested": false
+  }
+}
