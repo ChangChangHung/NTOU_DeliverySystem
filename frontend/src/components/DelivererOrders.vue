@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { demoAccount, stateText, useOrderTracking } from '../lib/orderTracking'
+import { arrivalTime, deliveryFee } from '../lib/deliveryEstimate'
 
 const DELIVERER_ID = demoAccount(import.meta.env.VITE_DELIVERER_ID ?? '1')
 const { orders, loading, error, notice, pendingAction, lastUpdated, online, blocked, loadOrders, changeOrder, key } = useOrderTracking('deliverer', DELIVERER_ID)
@@ -48,6 +49,8 @@ const { orders, loading, error, notice, pendingAction, lastUpdated, online, bloc
 
         <p class="time">下單時間：{{ order.timestamp }}</p>
         <p data-testid="delivery-address">送餐地址：{{ order.address }}</p>
+        <p v-if="order.state === 'processing'" data-testid="arrival-time">預計 {{ arrivalTime(order.timestamp, order.address) }} 送達</p>
+        <p data-testid="delivery-fee">外送費（你的收入）：NT$ {{ deliveryFee(order.address) }}</p>
 
         <div v-for="(item, index) in order.items" :key="index">
           <div class="item">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { demoAccount, stateText, useOrderTracking } from '../lib/orderTracking'
+import { arrivalTime, deliveryFee, deliveryMinutes } from '../lib/deliveryEstimate'
 
 const BUYER_ID = demoAccount(import.meta.env.VITE_BUYER_ID ?? '2')
 const { orders, loading, error, notice, pendingAction, lastUpdated, online, blocked, loadOrders, changeOrder, key } = useOrderTracking('buyer', BUYER_ID)
@@ -48,6 +49,9 @@ const { orders, loading, error, notice, pendingAction, lastUpdated, online, bloc
 
         <p data-testid="delivery-address">送餐地址：{{ order.address }}</p>
         <p v-if="order.deliverer_id">外送員：#{{ order.deliverer_id }}</p>
+        <p v-if="!order.deliveryMissing && (order.state === 'pending' || order.state === 'processing')" data-testid="arrival-time">
+          預計 {{ arrivalTime(order.timestamp, order.address) }} 送達（約 {{ deliveryMinutes(order.address) }} 分鐘）
+        </p>
 
         <div v-for="(item, index) in order.items" :key="index">
           <div class="item">
@@ -57,8 +61,13 @@ const { orders, loading, error, notice, pendingAction, lastUpdated, online, bloc
           <p v-if="item.note" class="note">備註：{{ item.note }}</p>
         </div>
 
+        <div v-if="!order.deliveryMissing" class="item" data-testid="delivery-fee">
+          <span>外送費</span>
+          <span>NT$ {{ deliveryFee(order.address) }}</span>
+        </div>
+
         <div class="bottom">
-          <span class="total">總金額：NT$ {{ order.total }}</span>
+          <span class="total">總金額：NT$ {{ order.deliveryMissing ? order.total : order.total + deliveryFee(order.address) }}</span>
 
           <button
             v-if="order.state === 'pending'"
