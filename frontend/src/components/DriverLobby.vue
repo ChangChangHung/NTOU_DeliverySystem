@@ -56,10 +56,15 @@ interface LobbyOrder extends OrderStamp {
 const DELIVERER_ID = Number(import.meta.env.VITE_DELIVERER_ID ?? '1')
 const validDeliverer = isPositiveInteger(DELIVERER_ID)
 const REQUEST_TIMEOUT_MS = 15000
+const REFRESH_INTERVAL_MS = 15000
 
 const orders = ref<LobbyOrder[]>([])
 const acceptedOrders = ref<LobbyOrder[]>([])
 const loading = ref(true)
+const refreshing = ref(false)
+const hasLoaded = ref(false)
+const lastUpdated = ref('')
+const online = ref(navigator.onLine)
 const error = ref('')
 const notice = ref('')
 const noticeKind = ref<'success' | 'error' | 'unknown'>('success')
@@ -67,6 +72,28 @@ const acceptingKey = ref<string | null>(null)
 let loadSequence = 0
 let loadController: AbortController | undefined
 let acceptController: AbortController | undefined
+let refreshTimer: number | undefined
+let disposed = false
+
+function clearRefreshTimer() {
+  window.clearTimeout(refreshTimer)
+  refreshTimer = undefined
+}
+
+function scheduleRefresh() {
+  clearRefreshTimer()
+  if (disposed || document.visibilityState !== 'visible' || !navigator.onLine
+    || refreshing.value || acceptingKey.value !== null) return
+  // 等這輪查完再計時，慢連線時不會一直重送查詢。
+  refreshTimer = window.setTimeout(() => { void loadOrders() }, REFRESH_INTERVAL_MS)
+}
+
+function resumeRefresh() {
+  online.value = navigator.onLine
+  clearRefreshTimer()
+  if (!disposed && document.visibilityState === 'visible' && online.value
+    && !refreshing.value && acceptingKey.value === null) void loadOrders()
+}
 
 class ApiError extends Error {
   constructor(message: string, readonly status: number, readonly hasJsonBody = false) {
@@ -218,12 +245,14 @@ function hasConsistentAssignment(details: OrderDetails): boolean {
 }
 
 async function loadOrders() {
+  if (disposed || refreshing.value) return
+  clearRefreshTimer()
   const sequence = ++loadSequence
   loadController?.abort()
   const controller = new AbortController()
   loadController = controller
-  loading.value = true
-  error.value = ''
+  refreshing.value = true
+  loading.value = !hasLoaded.value
 
   try {
     const meals = listOf(
@@ -290,24 +319,34 @@ async function loadOrders() {
     if (sequence === loadSequence) {
       orders.value = result
       acceptedOrders.value = acceptedResult
+      hasLoaded.value = true
+      error.value = ''
+      lastUpdated.value = new Date().toLocaleTimeString('zh-TW', { hour12: false })
     }
   } catch (e) {
     if (sequence !== loadSequence || controller.signal.aborted) return
     error.value = e instanceof ApiError || e instanceof ResponseError
       ? e.message
-      : '無法載入訂單，請確認後端是否啟動，再重新整理。'
+      : '暫時連不上伺服器，稍後會再試一次，也可以按重新整理。'
   } finally {
-    if (sequence === loadSequence) loading.value = false
+    if (sequence === loadSequence) {
+      loading.value = false
+      refreshing.value = false
+      scheduleRefresh()
+    }
   }
 }
 
 async function acceptOrder(order: LobbyOrder) {
-  if (acceptingKey.value !== null || loading.value || !validDeliverer) return
+  if (disposed || acceptingKey.value !== null || loading.value || error.value
+    || !online.value || !validDeliverer) return
+  clearRefreshTimer()
   acceptingKey.value = orderKey(order)
   notice.value = ''
   // 接單後只採用重新讀取的結果，避免先前的載入覆蓋清單。
   ++loadSequence
   loadController?.abort()
+  refreshing.value = false
   const controller = new AbortController()
   acceptController = controller
 
@@ -341,14 +380,25 @@ async function acceptOrder(order: LobbyOrder) {
       notice.value = '尚無法確認接單結果，請先查看更新後的清單。若清單未能更新，請重新整理後再操作。'
     }
   } finally {
-    if (!controller.signal.aborted) await loadOrders()
+    if (!disposed && !controller.signal.aborted) await loadOrders()
     acceptingKey.value = null
     acceptController = undefined
+    scheduleRefresh()
   }
 }
 
-onMounted(loadOrders)
+onMounted(() => {
+  document.addEventListener('visibilitychange', resumeRefresh)
+  window.addEventListener('online', resumeRefresh)
+  window.addEventListener('offline', resumeRefresh)
+  void loadOrders()
+})
 onBeforeUnmount(() => {
+  disposed = true
+  clearRefreshTimer()
+  document.removeEventListener('visibilitychange', resumeRefresh)
+  window.removeEventListener('online', resumeRefresh)
+  window.removeEventListener('offline', resumeRefresh)
   ++loadSequence
   loadController?.abort()
   acceptController?.abort()
@@ -358,25 +408,38 @@ onBeforeUnmount(() => {
 <template>
   <div class="page">
     <h1>外送員接單大廳</h1>
+    <nav class="page-links" aria-label="頁面導覽">
+      <a href="/deliverer-orders.html">我的外送單</a>
+      <a href="/">返回點餐</a>
+    </nav>
     <p class="demo-account" v-if="validDeliverer">示範帳號：外送員 #{{ DELIVERER_ID }}（尚未串接登入）</p>
     <p class="notice error-notice" v-else>示範外送員帳號設定無效，請確認 VITE_DELIVERER_ID 是正整數。</p>
 
     <div class="toolbar">
       <span>待接訂單 {{ orders.length }} 筆</span>
-      <button :disabled="loading || acceptingKey !== null" @click="loadOrders">重新整理</button>
+      <button :disabled="refreshing || acceptingKey !== null" @click="loadOrders">重新整理</button>
     </div>
+    <p class="refresh-status" data-testid="refresh-status">
+      <span v-if="!online">目前離線，恢復連線後會自動更新。</span>
+      <span v-else-if="refreshing && hasLoaded">正在更新訂單……</span>
+      <span v-else>每 15 秒自動更新，也可以手動重新整理。</span>
+      <span v-if="lastUpdated">上次更新：{{ lastUpdated }}</span>
+    </p>
 
     <p v-if="notice" class="notice" :class="noticeKind" role="status" aria-live="polite">{{ notice }}</p>
 
     <div v-if="loading" class="message">載入中……</div>
 
-    <div v-else-if="error" class="message" role="alert">{{ error }}</div>
+    <div v-if="error" class="notice error-notice" role="alert">
+      {{ error }}
+      <span v-if="hasLoaded">目前顯示上次的清單，更新成功後就能繼續接單。</span>
+    </div>
 
-    <div v-else-if="orders.length === 0" class="message">
+    <div v-if="!loading && !error && orders.length === 0" class="message">
       目前沒有待接訂單
     </div>
 
-    <div v-else>
+    <div v-if="!loading && orders.length > 0">
       <div
         v-for="order in orders"
         :key="orderKey(order)"
@@ -401,7 +464,7 @@ onBeforeUnmount(() => {
           <span class="total">餐點小計：NT$ {{ order.total }}</span>
           <button
             class="accept"
-            :disabled="acceptingKey !== null || loading || !validDeliverer"
+            :disabled="acceptingKey !== null || loading || !!error || !online || !validDeliverer"
             @click="acceptOrder(order)"
           >
             {{ acceptingKey === orderKey(order) ? '接單中……' : '接單' }}
@@ -411,7 +474,7 @@ onBeforeUnmount(() => {
     </div>
 
     <section
-      v-if="!loading && !error && validDeliverer"
+      v-if="hasLoaded && validDeliverer"
       class="accepted-section"
       data-testid="accepted-orders"
       aria-labelledby="accepted-orders-title"
@@ -472,9 +535,21 @@ h1 {
   text-align: center;
 }
 
+.page-links { display: flex; justify-content: center; gap: 20px; margin: 12px 0; }
+.page-links a { color: #37506a; }
+
 .notice.success { color: #215c36; }
 .notice.error, .error-notice { color: #992e25; }
 .notice.unknown { color: #79500b; }
+
+.refresh-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  color: #666;
+  font-size: 14px;
+  margin: -5px 0 15px;
+}
 
 .toolbar {
   display: flex;

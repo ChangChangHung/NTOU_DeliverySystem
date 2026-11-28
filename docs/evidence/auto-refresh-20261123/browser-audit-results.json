@@ -1,0 +1,173 @@
+{
+  "schema": "ntou.acceptance.frontend-audit.v1",
+  "completed_at": "2026-11-22T20:46:46.184Z",
+  "passed": true,
+  "total": 13,
+  "passed_cases": 13,
+  "cases": [
+    {
+      "name": "audit-meal-buyer-identity",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 189,
+      "error": "餐點資料與查詢的訂單不一致，請重新整理。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 0,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-meal-timestamp-identity",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 137,
+      "error": "餐點資料與查詢的訂單不一致，請重新整理。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 0,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-delivery-buyer-identity",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 132,
+      "error": "送餐資料與查詢的訂單不一致，請重新整理。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 1,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-delivery-timestamp-identity",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 131,
+      "error": "送餐資料與查詢的訂單不一致，請重新整理。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 1,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-recheck-after-acceptance",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 128,
+      "recovered_as": "own accepted order",
+      "meal_reads": 2,
+      "delivery_reads": 2,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-recheck-after-abandonment",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 125,
+      "recovered_as": "pending order",
+      "meal_reads": 2,
+      "delivery_reads": 2,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-persistent-pending-assigned",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 143,
+      "error": "訂單狀態與外送員資料尚未一致，請重新整理後再操作。",
+      "bad_data_hidden": true,
+      "meal_reads": 2,
+      "delivery_reads": 2,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-persistent-processing-unassigned",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 123,
+      "error": "訂單狀態與外送員資料尚未一致，請重新整理後再操作。",
+      "bad_data_hidden": true,
+      "meal_reads": 2,
+      "delivery_reads": 2,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-unknown-order-state",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 115,
+      "error": "訂單餐點資料格式不正確，請確認後端資料。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 0,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-unsafe-subtotal",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 143,
+      "error": "訂單金額超出可正確計算的範圍，請確認餐點價格與數量。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 1,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-unsafe-total",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 139,
+      "error": "訂單金額超出可正確計算的範圍，請確認餐點價格與數量。",
+      "bad_data_hidden": true,
+      "meal_reads": 1,
+      "delivery_reads": 1,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-refresh-lifecycle-and-owner",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 346,
+      "transitions": [
+        "own-processing",
+        "cancelled",
+        "pending",
+        "other-courier-processing"
+      ],
+      "meal_reads": 4,
+      "delivery_reads": 3,
+      "acceptance_posts": 0
+    },
+    {
+      "name": "audit-mobile-long-content",
+      "mode": "browser response injection; no backend API requests forwarded",
+      "passed": true,
+      "duration_ms": 352,
+      "pending": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390
+      },
+      "accepted": {
+        "viewport": 390,
+        "document": 390,
+        "body": 390
+      },
+      "desktop": {
+        "viewport": 1100,
+        "document": 1100,
+        "body": 1100
+      },
+      "meal_reads": 2,
+      "delivery_reads": 2,
+      "acceptance_posts": 0
+    }
+  ],
+  "page_errors": [],
+  "unexpected_writes": [],
+  "backend_api_requests_forwarded": 0,
+  "limits": [
+    "All audit API responses are injected in isolated browser contexts; no database writes or real transition races are claimed."
+  ]
+}

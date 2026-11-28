@@ -1,7 +1,7 @@
 
 # Python
-backend/.venv/
-.local-runtime/
+backend/.venv
+.local-runtime
 artifacts/
 .playwright-cli/
 output/

@@ -1,0 +1,170 @@
+{
+  "schema": "ntou.acceptance.polling-browser.v1",
+  "completed_at": "2026-11-24T21:06:46.966Z",
+  "passed": true,
+  "total": 14,
+  "passed_cases": 14,
+  "cases": [
+    {
+      "name": "initial-and-multiple-refreshes",
+      "passed": true,
+      "duration_ms": 284,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 27,
+      "interval_boundary_ms": 15000,
+      "added_and_removed_pending": true,
+      "replaced_own_orders": true,
+      "other_courier_filtered": true
+    },
+    {
+      "name": "slow-background-keeps-cards-and-serializes",
+      "passed": true,
+      "duration_ms": 348,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 21,
+      "simulated_read_duration_ms": 18000,
+      "cards_retained": true,
+      "no_overlapping_rounds": true
+    },
+    {
+      "name": "manual-refresh-resets-next-interval",
+      "passed": true,
+      "duration_ms": 282,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 21,
+      "manual_refresh_worked": true,
+      "previous_timer_cleared": true
+    },
+    {
+      "name": "accept-interrupts-background-and-posts-once",
+      "passed": true,
+      "duration_ms": 311,
+      "read_rounds": 4,
+      "acceptance_posts": 1,
+      "api_requests": 23,
+      "stale_read_aborted": true,
+      "post_count": 1,
+      "immediate_post_refresh": true,
+      "stale_result_ignored": true
+    },
+    {
+      "name": "accept-conflict-refreshes-without-retry",
+      "passed": true,
+      "duration_ms": 195,
+      "read_rounds": 3,
+      "acceptance_posts": 1,
+      "api_requests": 22,
+      "response_status": 409,
+      "post_count": 1,
+      "outcome_refreshed": true
+    },
+    {
+      "name": "accept-unknown-refreshes-without-retry",
+      "passed": true,
+      "duration_ms": 170,
+      "read_rounds": 3,
+      "acceptance_posts": 1,
+      "api_requests": 22,
+      "response_status": 500,
+      "post_count": 1,
+      "outcome_refreshed": true
+    },
+    {
+      "name": "background-error-retains-cards-and-recovers",
+      "passed": true,
+      "duration_ms": 222,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 15,
+      "stale_cards_retained": true,
+      "acceptance_blocked_until_success": true,
+      "automatic_recovery": true
+    },
+    {
+      "name": "initial-error-recovers-automatically",
+      "passed": true,
+      "duration_ms": 138,
+      "read_rounds": 2,
+      "acceptance_posts": 0,
+      "api_requests": 8,
+      "automatic_recovery": true
+    },
+    {
+      "name": "manual-refresh-recovers-background-error",
+      "passed": true,
+      "duration_ms": 197,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 15,
+      "manual_recovery": true
+    },
+    {
+      "name": "hidden-and-offline-pause-until-visible-online",
+      "passed": true,
+      "duration_ms": 230,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 21,
+      "hidden_pause_ms": 60000,
+      "offline_pause_ms": 60000,
+      "immediate_visible_resume": true,
+      "immediate_online_resume": true
+    },
+    {
+      "name": "offline-during-read-prevents-next-round",
+      "passed": true,
+      "duration_ms": 239,
+      "read_rounds": 3,
+      "acceptance_posts": 0,
+      "api_requests": 21,
+      "current_read_finished": true,
+      "next_round_paused": true,
+      "online_recovered": true
+    },
+    {
+      "name": "unmount-clears-idle-timer-and-listeners",
+      "passed": true,
+      "duration_ms": 186,
+      "read_rounds": 1,
+      "acceptance_posts": 0,
+      "api_requests": 7,
+      "no_requests_after_unmount": true,
+      "visibility_and_online_listeners_inactive": true
+    },
+    {
+      "name": "unmount-aborts-active-read",
+      "passed": true,
+      "duration_ms": 214,
+      "read_rounds": 2,
+      "acceptance_posts": 0,
+      "api_requests": 8,
+      "active_read_aborted": true,
+      "no_requests_after_unmount": true
+    },
+    {
+      "name": "unmount-aborts-acceptance-without-followup",
+      "passed": true,
+      "duration_ms": 194,
+      "read_rounds": 1,
+      "acceptance_posts": 1,
+      "api_requests": 8,
+      "active_acceptance_aborted": true,
+      "no_requests_after_unmount": true,
+      "post_count": 1
+    }
+  ],
+  "page_errors": [],
+  "unexpected_requests": [],
+  "refresh_interval_ms": 15000,
+  "backend_api_requests_forwarded": 0,
+  "limits": [
+    "All API responses are synthetic in isolated browser contexts; no database or real backend race is claimed.",
+    "Browser time is advanced with Playwright clock while the component interval remains 15000 ms.",
+    "Visibility uses controlled document visibility properties plus real visibilitychange listeners; offline uses Chrome context.setOffline.",
+    "Unmount invokes the local Vue app lifecycle through its development mount handle."
+  ],
+  "browser": "158.0.8127.38"
+}

@@ -146,13 +146,11 @@ npx --yes --package @playwright/cli@0.1.24 playwright-cli --session ntou-qa run-
 
 腳本會新增並接下兩張合成訂單，也會攔截瀏覽器回應來測錯誤提示，不會重置資料庫。重跑前請另存原有的 `qa-results.json` 和截圖，保留每次結果。最後要確認 JSON 是 `passed: true`、16 個 case 都通過，並檢查 `page_errors`；CLI 正常返回不一定代表測試通過。這次的結果與限制見[驗收對照表](acceptance-checklist.md)。
 
-請保留 JSON、stderr、seed JSON、build 日誌和瀏覽器／影片紀錄。seed 裡的帳號是合成資料的 ID，**登入驗證還沒完成**。接單程式和文件整理在 `feature/yves20716-order-acceptance` 分支，這次測試結果的固定副本放在 `docs/evidence`，可提供給組長。重跑產生的 `artifacts` 和本機設定 `.local-runtime` 仍需各自保存，私有連線設定及密碼不要分享。
+請保留 JSON、stderr、seed JSON、build 日誌和瀏覽器／影片紀錄。seed 裡的帳號是合成資料的 ID，**登入驗證還沒完成**。接單程式和文件整理在 `feature/yves20716-order-acceptance` 分支，這次測試結果的固定副本放在 `docs/evidence`。重跑產生的 `artifacts` 和本機設定 `.local-runtime` 仍需各自保存，私有連線設定及密碼不要分享。
 
 舊版[字幕 Demo](evidence/demo-captioned.mp4)共 52.44 秒。前 36.44 秒保留 2026-11-14 的接單操作，後 16 秒是 2026-11-15 補錄的資料庫查詢，兩段並非連續拍攝。新版雙頁錄影使用上面的入口，各版[時間軸與講稿](acceptance-demo.md)另附。
 
 補錄使用[這份 SQL](evidence/demo-database-query.sql)，只讀取 `127.0.0.1:3307` 上的原 Demo schema `ntou_acceptance_demo_20261114_b8877ae024`，沒有重新接單或修改訂單資料。買家 `1` 的兩筆餐點由外送員 `2` 接下，買家 `4` 的一筆餐點由外送員 `3` 接下，三筆都是 `PROCESSING`。結果見[查詢紀錄](evidence/browser/demo-database-query.json)與[畫面](evidence/browser/demo-database-query.png)。若要在自己的新 seed 查詢，需改用那次產生的 schema、買家 ID 和時間戳。
-
-這些資料只涵蓋我負責的接單模組，課程作業的繳交狀態需要另外確認。
 
 ### 錄新版影片
 

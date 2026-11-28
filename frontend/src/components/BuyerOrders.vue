@@ -1,229 +1,57 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { demoAccount, stateText, useOrderTracking } from '../lib/orderTracking'
+import { arrivalTime, deliveryFee, deliveryMinutes } from '../lib/deliveryEstimate'
 
-interface Meal {
-  meal_id: number
-  meal_name: string
-  restaurant_id: number
-  price: number
-}
-
-interface Restaurant {
-  restaurant_id: number
-  restaurant_name: string
-  restaurant_address: string
-}
-
-interface OrderStamp {
-  buyer_id: string
-  timestamp: string
-}
-
-interface OrderMeal {
-  meal_id: number
-  quantity: number
-  note: string | null
-  order_state: string
-}
-
-interface OrderItem {
-  name: string
-  restaurant: string
-  price: number
-  quantity: number
-  note: string | null
-}
-
-interface MyOrder {
-  buyer_id: string
-  timestamp: string
-  address: string
-  deliverer_id: number | null
-  state: string
-  items: OrderItem[]
-  total: number
-}
-
-// 登入還沒做好，用 VITE_BUYER_ID 設定買家帳號，沒設定就用 2
-const BUYER_ID = Number(import.meta.env.VITE_BUYER_ID ?? '2')
-
-const stateText: Record<string, string> = {
-  in_cart: '購物車中',
-  pending: '待接單',
-  processing: '外送中',
-  completed: '已完成',
-  cancelled: '已取消',
-}
-
-const orders = ref<MyOrder[]>([])
-
-const loading = ref(true)
-const error = ref('')
-const notice = ref('')
-
-async function loadOrders() {
-  loading.value = true
-  error.value = ''
-
-  try {
-    const mealResponse = await fetch('/api/view_all_meals')
-    const meals: Meal[] = await mealResponse.json()
-
-    const restaurantResponse = await fetch('/api/view_all_restaurants')
-    const restaurants: Restaurant[] = await restaurantResponse.json()
-
-    const stampResponse = await fetch('/api/view_order_by_stamp')
-    if (!stampResponse.ok) throw new Error('無法取得訂單')
-
-    const stamps: OrderStamp[] = await stampResponse.json()
-    const result: MyOrder[] = []
-
-    for (const stamp of stamps) {
-      // 只留自己下的單
-      if (Number(stamp.buyer_id) !== BUYER_ID) continue
-
-      const mealsOfOrderResponse = await fetch('/api/view_meals_of_order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stamp),
-      })
-      const orderMeals: OrderMeal[] = await mealsOfOrderResponse.json()
-
-      // 查送餐地址和外送員，還沒建立外送資料的訂單就先空著
-      const deliveryResponse = await fetch('/api/view_delivery', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(stamp),
-      })
-
-      let address = '未填寫'
-      let delivererId: number | null = null
-
-      if (deliveryResponse.ok) {
-        const delivery = await deliveryResponse.json()
-        address = delivery[0].pickup_address
-        delivererId = delivery[0].deliverer_id
-      }
-
-      const items = orderMeals.map(orderMeal => {
-        const meal = meals.find(m => m.meal_id === orderMeal.meal_id)!
-        const restaurant = restaurants.find(
-          r => r.restaurant_id === meal.restaurant_id,
-        )!
-
-        return {
-          name: meal.meal_name,
-          restaurant: restaurant.restaurant_name,
-          price: meal.price,
-          quantity: orderMeal.quantity,
-          note: orderMeal.note,
-        }
-      })
-
-      result.push({
-        buyer_id: stamp.buyer_id,
-        timestamp: stamp.timestamp,
-        address,
-        deliverer_id: delivererId,
-        state: orderMeals[0]!.order_state,
-        items,
-        total: items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
-        ),
-      })
-    }
-
-    orders.value = result
-  } catch {
-    error.value = '無法連接後端，請確認 Python 伺服器是否啟動。'
-  } finally {
-    loading.value = false
-  }
-}
-
-// 取消訂單、完成訂單都用這個，url 傳要呼叫的 API
-async function changeOrder(order: MyOrder, url: string, question: string) {
-  if (!confirm(question)) return
-
-  notice.value = ''
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        buyer_id: order.buyer_id,
-        timestamp: order.timestamp,
-      }),
-    })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      throw new Error(result.message ? String(result.message) : '操作失敗')
-    }
-
-    notice.value = String(result.message)
-  } catch (e) {
-    notice.value = e instanceof Error ? e.message : '操作失敗，請稍後再試。'
-  }
-
-  await loadOrders()
-}
-
-// 每 15 秒自動重新整理一次，才看得到對方改過的狀態
-let timer = 0
-
-onMounted(() => {
-  loadOrders()
-  timer = window.setInterval(() => {
-    if (!loading.value) loadOrders()
-  }, 15000)
-})
-
-onUnmounted(() => window.clearInterval(timer))
+const BUYER_ID = demoAccount(import.meta.env.VITE_BUYER_ID ?? '2')
+const { orders, loading, error, notice, pendingAction, lastUpdated, online, blocked, loadOrders, changeOrder, key } = useOrderTracking('buyer', BUYER_ID)
 </script>
 
 <template>
   <div class="page">
     <h1>我的訂單</h1>
-    <p class="account">示範帳號：買家 #{{ BUYER_ID }}（尚未串接登入）</p>
+    <p class="account" data-testid="demo-account">示範帳號：買家 {{ BUYER_ID === null ? "設定無效" : `#${BUYER_ID}` }}（尚未串接登入）</p>
+    <p><a href="/">← 回點餐頁</a></p>
 
     <div class="toolbar">
       <span>共 {{ orders.length }} 筆</span>
-      <button :disabled="loading" @click="loadOrders">重新整理</button>
+      <button data-testid="refresh-orders" :disabled="loading || !!pendingAction || !online || BUYER_ID === null" @click="loadOrders()">{{ loading ? "更新中……" : "重新整理" }}</button>
     </div>
 
-    <p v-if="notice" class="notice">{{ notice }}</p>
+    <p class="refresh-status" data-testid="refresh-status">{{ lastUpdated ? `上次更新：${lastUpdated}；每 15 秒自動更新` : '每 15 秒自動更新' }}</p>
+    <p v-if="notice" class="notice" role="status" data-testid="action-notice">{{ notice }}</p>
+    <p v-if="pendingAction" class="notice" role="status">正在處理訂單，請稍候……</p>
+    <div v-if="error" class="notice error" role="alert" data-testid="orders-error">
+      <p>{{ error }}</p>
+      <p v-if="orders.length">下方保留上次查詢結果，更新成功後才能繼續操作。</p>
+      <button data-testid="retry-orders" :disabled="loading || !!pendingAction || !online || BUYER_ID === null" @click="loadOrders()">重試</button>
+    </div>
 
     <div v-if="loading && orders.length === 0" class="message">載入中……</div>
 
-    <div v-else-if="error" class="message">{{ error }}</div>
-
-    <div v-else-if="orders.length === 0" class="message">
+    <div v-else-if="!error && orders.length === 0" class="message">
       目前沒有訂單
     </div>
 
-    <div v-else>
+    <div v-else-if="orders.length">
       <div
         v-for="order in orders"
-        :key="order.timestamp"
+        :key="key(order)"
         class="order"
+        data-testid="order-card"
+        :data-order-key="key(order)"
+        :data-order-state="order.state"
+        :aria-busy="pendingAction === key(order)"
       >
         <div class="order-title">
           <strong>{{ order.timestamp }}</strong>
-          <span class="state">{{ stateText[order.state] }}</span>
+          <span class="state" data-testid="order-state">{{ stateText[order.state] }}</span>
         </div>
 
-        <p>送餐地址：{{ order.address }}</p>
+        <p data-testid="delivery-address">送餐地址：{{ order.address }}</p>
         <p v-if="order.deliverer_id">外送員：#{{ order.deliverer_id }}</p>
+        <p v-if="!order.deliveryMissing && (order.state === 'pending' || order.state === 'processing')" data-testid="arrival-time">
+          預計 {{ arrivalTime(order.timestamp, order.address) }} 送達（約 {{ deliveryMinutes(order.address) }} 分鐘）
+        </p>
 
         <div v-for="(item, index) in order.items" :key="index">
           <div class="item">
@@ -233,20 +61,29 @@ onUnmounted(() => window.clearInterval(timer))
           <p v-if="item.note" class="note">備註：{{ item.note }}</p>
         </div>
 
+        <div v-if="!order.deliveryMissing" class="item" data-testid="delivery-fee">
+          <span>外送費</span>
+          <span>NT$ {{ deliveryFee(order.address) }}</span>
+        </div>
+
         <div class="bottom">
-          <span class="total">總金額：NT$ {{ order.total }}</span>
+          <span class="total">總金額：NT$ {{ order.deliveryMissing ? order.total : order.total + deliveryFee(order.address) }}</span>
 
           <button
             v-if="order.state === 'pending'"
-            @click="changeOrder(order, '/api/cancel_order', '確定要取消這筆訂單嗎？')"
+            :disabled="blocked"
+            data-testid="cancel-order"
+            @click="changeOrder(order, 'cancel', '確定要取消這筆訂單嗎？')"
           >
             取消訂單
           </button>
 
           <button
             v-if="order.state === 'processing'"
+            :disabled="blocked"
+            data-testid="complete-order"
             class="primary"
-            @click="changeOrder(order, '/api/complete_order', '確定已經收到餐點，要完成這筆訂單嗎？')"
+            @click="changeOrder(order, 'complete', '確定已經收到餐點，要完成這筆訂單嗎？')"
           >
             已收到餐點
           </button>
@@ -262,6 +99,7 @@ onUnmounted(() => window.clearInterval(timer))
   margin: 0 auto;
   padding: 20px;
   color: #333;
+  overflow-wrap: anywhere;
 }
 
 h1 {
@@ -350,5 +188,26 @@ button {
   background: #333;
   color: white;
   padding: 10px 20px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.refresh-status {
+  color: #666;
+  font-size: 14px;
+}
+
+.error {
+  background: #fff1e8;
+}
+
+@media (max-width: 520px) {
+  .page { padding: 12px; }
+  .order { padding: 14px; }
+  .bottom { flex-wrap: wrap; gap: 12px; }
+  .order-title, .item { gap: 12px; }
 }
 </style>

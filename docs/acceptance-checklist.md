@@ -64,7 +64,7 @@
 | 手機寬度 | 390×844 viewport 下 document／body 寬度均為 390，無水平溢出；[截圖](evidence/browser/qa-mobile-390x844.png)已檢視 |
 | 資料庫查詢補錄（2026-11-15） | 真實讀取原 Demo MySQL；買家 `1` 的兩筆餐點由外送員 `2` 接下，買家 `4` 的一筆餐點由外送員 `3` 接下，三筆皆 `PROCESSING`。保留 [SQL](evidence/demo-database-query.sql)、[查詢結果](evidence/browser/demo-database-query.json)和[畫面](evidence/browser/demo-database-query.png)。只查詢資料，沒有重新接單 |
 | Demo 影片 | [字幕 MP4](evidence/demo-captioned.mp4)已完成，52.44 秒、1280×900、H.264；前 36.44 秒保留 11/14 操作，後 16 秒是 11/15 補錄的資料庫查詢，已逐段檢查字幕與畫面。[時間軸與講稿](acceptance-demo.md)另附 |
-| 給組長的模組素材 | 已整理 API、資料、順序／狀態圖與限制；是否收到、是否已放進全組文件，還要與組長確認 |
+| 模組設計素材 | 已整理 API、資料模型、順序／狀態圖與實作限制 |
 
 前端補強 QA 合計 **16/16 通過、0 pageerrors**，各項結果和真 API／注入模式都記在 [qa-results.json](evidence/browser/qa-results.json)，原始 CLI 輸出見 [qa-cli-output.json](evidence/browser/qa-cli-output.json)。我也保留了首輪的 [15/16 紀錄](evidence/browser/qa-first-run-results.json)：當時測試餐點的數量配反，小計是 260，預期卻寫 280。修正 fixture 後重跑就通過，沒有改產品程式。注入案例只測前端如何處理回應，沒有真的讓後端故障；單頁連點也和兩個交易競爭分開測。
 
@@ -72,6 +72,6 @@
 
 11/15 已補測 `IN_CART`、無效 `VITE_DELIVERER_ID`，以及同買家不同時間、不同買家同時間的其他訂單不被改動。晚上的新一輪也測了同秒下單碰撞、完成／取消／棄單交錯，以及接單讀到舊 Delivery 的情況。還沒逐一測試所有非法數值／時間型別、真正程序重啟、所有缺餐點／餐廳的組合與所有可能的交易交錯。
 
-同買家同秒的第二次下單目前回 `409`，不再合併餐點；若要兩次都成功，還需要新的整單識別方式。正式登入與角色權限、刪單／取消規則、付款退款、無人接單與未收餐、地址及外送費，仍要和團隊討論。是否達到課程要求的 40% 實作，也要合併其他模組一起確認。
+同買家同秒的第二次下單目前回 `409`，不再合併餐點；若要兩次都成功，還需要新的整單識別方式。正式登入與角色權限尚未串接；刪單／取消規則、付款退款、無人接單與未收餐的處理、地址定義及外送費計算方式尚未確定。
 
 文件連到的 `docs/evidence` 保留這次測試結果；重跑的新紀錄會放在 `artifacts`，不會自動覆蓋這一份。

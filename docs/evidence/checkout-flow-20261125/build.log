@@ -1,0 +1,35 @@
+
+> frontend@0.0.0 build
+> run-p type-check "build-only {@}" --
+
+
+> frontend@0.0.0 build-only
+> vite build
+
+
+> frontend@0.0.0 type-check
+> vue-tsc --build
+
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 32 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                   0.52 kB │ gzip:  0.32 kB
+dist/driver.html                                  0.68 kB │ gzip:  0.40 kB
+dist/buyer-orders.html                            0.76 kB │ gzip:  0.43 kB
+dist/deliverer-orders.html                        0.77 kB │ gzip:  0.42 kB
+dist/assets/driver-B3G_WC6R.css                   0.19 kB │ gzip:  0.17 kB
+dist/assets/buyerOrders-8Dyx9EVS.css              1.62 kB │ gzip:  0.54 kB
+dist/assets/delivererOrders-BTv4pifG.css          1.74 kB │ gzip:  0.57 kB
+dist/assets/driver-BIv_7GK-.css                   2.30 kB │ gzip:  0.71 kB
+dist/assets/main-BgswNroT.css                     9.59 kB │ gzip:  2.76 kB
+dist/assets/driver-CIkSUNmw.js                    0.08 kB │ gzip:  0.09 kB
+dist/assets/buyerOrders-D7FuaGav.js               3.39 kB │ gzip:  1.71 kB
+dist/assets/delivererOrders-ziqc1PPl.js           3.39 kB │ gzip:  1.73 kB
+dist/assets/orderTracking-BzDXximj.js             8.01 kB │ gzip:  3.26 kB
+dist/assets/driver-Ddwvr0cY.js                   10.35 kB │ gzip:  4.13 kB
+dist/assets/main-DGmc2V1V.js                     24.51 kB │ gzip:  8.80 kB
+dist/assets/runtime-dom.esm-bundler-BUSEtWxQ.js  65.33 kB │ gzip: 25.71 kB
+
+✓ built in 291ms

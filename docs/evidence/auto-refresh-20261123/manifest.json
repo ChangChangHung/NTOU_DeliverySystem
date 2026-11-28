@@ -1,0 +1,34 @@
+{
+  "checked_at": "2026-11-23T04:47:52.123814+08:00",
+  "base_commit": "126b9ccc92618bd4adfa237fc55af67903d7333d",
+  "local_mysql_integration": {
+    "passed": 11,
+    "total": 11,
+    "independent_database_checks": 5
+  },
+  "browser_polling_simulations": {
+    "passed": 14,
+    "total": 14,
+    "backend_requests_forwarded": 0
+  },
+  "response_and_layout_audit": {
+    "passed": 13,
+    "total": 13
+  },
+  "source_sha256": {
+    "frontend/src/components/DriverLobby.vue": "759e81c30354b378c27dd56e87608310ed474cb710e239f3d784742d225f6cac",
+    "frontend/tests/acceptance-integration.mjs": "6666cd055ba2524b700eacfde3b8edfafa9cc8bd6d54e63fd881836d5a8214cb",
+    "frontend/tests/acceptance-polling.mjs": "7f13398c2814a6490c7e70bf4e416d5209112408d34937da4c28ece85a89cf46",
+    "backend/scripts/local_integration.py": "23dccfd52c345086f4e0995b080fb8b68f83e763add9a45948a2acc057cea6d8"
+  },
+  "evidence_sha256": {
+    "polling-results.json": "5e068d71f04e5cc785d72b5ef8ca725e1c9d07e709b02ae08b8ca6bbb67bd502",
+    "own-orders-load-error.png": "74e4e7c05dcc619c62e42f8a0460f9ac030607908bf190a689e6c2a91c5a3366",
+    "automatic-accepted-0.png": "f0c2480a28fdfb4d3c189940d2497c5ca4ad905acfa9b5517ab9e396aba8dc51",
+    "automatic-accepted-1.png": "e7e99f57ff1be95963bfd796b950f864e687a73f12bfdfa5ac6a331f7e6c0479",
+    "integration-results.json": "5189392252fe25f31c1d2629ed007220a66d8276bf39bbc51da11f6cfb14de48",
+    "automatic-new-order.png": "4b9195e05a733cc26a878ee6a3791146c5859c32333191a16dc7d76037369b28",
+    "browser-audit-results.json": "a63dc71f6083e3c7f9c120035a9e164c1beac4320f74b06fe05896e175e9ab43",
+    "browser-results.json": "93d32e9202379a79bcdbf9881e0b9c7454ed6222ccc6b77f2b3db201ac53f2b3"
+  }
+}

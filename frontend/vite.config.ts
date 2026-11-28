@@ -12,6 +12,7 @@ export default defineConfig({
         driver: fileURLToPath(new URL('./driver.html', import.meta.url)),
         delivererOrders: fileURLToPath(new URL('./deliverer-orders.html', import.meta.url)),
         buyerOrders: fileURLToPath(new URL('./buyer-orders.html', import.meta.url)),
+        reviews: fileURLToPath(new URL('./reviews.html', import.meta.url)),
       },
     },
   },

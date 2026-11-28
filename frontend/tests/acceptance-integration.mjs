@@ -135,6 +135,9 @@ export default async function runIntegration({ browser, frontendUrls, apiBase, s
       contexts.push(context)
       const page = await context.newPage()
       pages.push(page)
+      // 舊畫面接單案例要固定在下一輪更新前；最後再用真實時間測輪詢。
+      await page.clock.install()
+      await page.clock.pauseAt(new Date(Date.now() + 50))
       page.on('pageerror', error => pageErrors.push({ scenario, page: index, message: error.message }))
       page.on('request', request => {
         if (new URL(request.url()).pathname === '/api/process_order' && request.method() === 'POST') {
@@ -283,6 +286,7 @@ export default async function runIntegration({ browser, frontendUrls, apiBase, s
       assert(aOrder?.expected_deliverer_id === couriers[0] && bOrder?.expected_deliverer_id === couriers[1], 'Need one accepted order per courier')
       await ownOrder(a, b, aOrder)
       await ownOrder(b, a, bOrder)
+      assert(await a.locator('button.accept').count() > 0, 'Need a pending order to verify stale-card blocking')
       const acceptCount = requests.length
       const message = '聯測模擬：訂單清單暫時讀取失敗'
       let injectedResponses = 0
@@ -296,7 +300,8 @@ export default async function runIntegration({ browser, frontendUrls, apiBase, s
         await a.getByRole('button', { name: '重新整理', exact: true }).click()
         await a.getByRole('alert').filter({ hasText: message }).waitFor()
         assert(injectedResponses === 1, 'Expected exactly one injected list failure')
-        assert(await a.getByTestId('accepted-orders').count() === 0, 'Load failure left the own-orders section visible')
+        assert(await ownCard(a, aOrder).count() === 1, 'Load failure erased the last successful own-orders list')
+        assert(await a.locator('button.accept').evaluateAll(items => items.every(button => button.disabled)), 'Stale pending cards remain actionable after a refresh failure')
         assert(await a.getByText('目前沒有已接訂單', { exact: true }).count() === 0, 'Load failure was presented as an empty own-orders list')
         assert(await a.getByRole('button', { name: '重新整理', exact: true }).isEnabled(), 'Refresh did not recover after the load failure')
         await a.screenshot({ path: path.join(outputDir, 'own-orders-load-error.png'), fullPage: true })
@@ -342,11 +347,50 @@ export default async function runIntegration({ browser, frontendUrls, apiBase, s
       }
       return { hidden_orders: cartFixtures.map(stamp) }
     })
+
+    let automaticOrder
+    await run('automatic-new-order', 'real local API and wall-clock polling; no refresh click', async () => {
+      await Promise.all([a, b].map(page => page.clock.resume()))
+      automaticOrder = await createOrder('automatic-refresh')
+      const started = Date.now()
+      await Promise.all([a, b].map(page => card(page, automaticOrder).waitFor({ timeout: 30000 })))
+      await a.screenshot({ path: path.join(outputDir, 'automatic-new-order.png'), fullPage: true })
+      return { order: stamp(automaticOrder), observed_after_ms: Date.now() - started, manual_refreshes: 0 }
+    })
+    await run('automatic-other-courier-removal', 'real acceptance and wall-clock polling; no refresh click', async () => {
+      assert(automaticOrder, 'Need the automatically discovered order')
+      const response = acceptanceResponse(a, automaticOrder)
+      await acceptButton(a, automaticOrder).click()
+      assert((await response).status() === 200, 'Acceptance failed')
+      await ready(a)
+      const started = Date.now()
+      await card(b, automaticOrder).waitFor({ state: 'detached', timeout: 30000 })
+      const own = await ownOrder(a, b, automaticOrder)
+      const persisted = await assigned(automaticOrder, couriers[0])
+      await Promise.all([a, b].map((page, index) => page.screenshot({
+        path: path.join(outputDir, `automatic-accepted-${index}.png`), fullPage: true,
+      })))
+      return { order: stamp(automaticOrder), observed_after_ms: Date.now() - started,
+        manual_refreshes: 0, own_order: own, persisted }
+    })
+    await run('automatic-completed-order-removal', 'teammate completion API and wall-clock polling', async () => {
+      assert(automaticOrder, 'Need an accepted order')
+      await api('/api/complete_order', stamp(automaticOrder))
+      const started = Date.now()
+      await ownCard(a, automaticOrder).waitFor({ state: 'detached', timeout: 30000 })
+      const persisted = await state(automaticOrder)
+      assert(persisted.meals.every(meal => meal.order_state === 'completed'), 'Completed state is missing')
+      assert(persisted.delivery[0].deliverer_id === couriers[0], 'Completion changed the courier')
+      automaticOrder.expected_states = ['COMPLETED', 'COMPLETED']
+      return { order: stamp(automaticOrder), observed_after_ms: Date.now() - started,
+        manual_refreshes: 0, persisted }
+    })
   } finally {
     await Promise.all(contexts.map(context => context.close()))
   }
   const expectedCases = ['two-courier-pages', 'delivery-created-after-order', 'stale-second-courier-409',
-    'two-pages-compete', 'response-lost-after-commit', 'own-orders-load-error-recovery', 'invalid-courier-setting', 'in-cart-hidden']
+    'two-pages-compete', 'response-lost-after-commit', 'own-orders-load-error-recovery', 'invalid-courier-setting', 'in-cart-hidden',
+    'automatic-new-order', 'automatic-other-courier-removal', 'automatic-completed-order-removal']
   return {
     schema: 'ntou.acceptance.integration.v1', run_id: runId, completed_at: new Date().toISOString(),
     passed: cases.length === expectedCases.length

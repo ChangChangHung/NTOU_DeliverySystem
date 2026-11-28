@@ -1,0 +1,333 @@
+{
+  "passed": true,
+  "rehearsal": true,
+  "base": "http://127.0.0.1:5104",
+  "accounts": {
+    "buyer": 1,
+    "a": 2,
+    "b": 3
+  },
+  "started_at": "2026-11-24T21:12:35.597Z",
+  "events": [
+    {
+      "name": "intro",
+      "seconds": 1.51,
+      "line1": "這次把點餐、購物車和外送員頁面接起來測試。",
+      "line2": "先在本機試跑操作。"
+    },
+    {
+      "name": "cart-1",
+      "seconds": 3.84,
+      "line1": "先選兩種餐點，改一下數量，再填送餐地址。",
+      "line2": "餐點備註和送餐地址都會跟著訂單傳到後端。"
+    },
+    {
+      "name": "buyer-order-1",
+      "seconds": 4.72,
+      "line1": "下單後會轉到「我的訂單」，可以看到餐點、地址和待接單狀態。",
+      "line2": "購物車只會在餐點與外送資料都確認成功後清空。"
+    },
+    {
+      "name": "cart-2",
+      "seconds": 6.56,
+      "line1": "再從點餐頁送出第二張測試單。",
+      "line2": "餐點備註和送餐地址都會跟著訂單傳到後端。"
+    },
+    {
+      "name": "buyer-order-2",
+      "seconds": 7.44,
+      "line1": "下單後會轉到「我的訂單」，可以看到餐點、地址和待接單狀態。",
+      "line2": "購物車只會在餐點與外送資料都確認成功後清空。"
+    },
+    {
+      "name": "polling",
+      "seconds": 8.2,
+      "line1": "切到兩位外送員的大廳，等清單自己更新。",
+      "line2": "這裡沒有按重新整理；頁面每 15 秒會重新查詢。"
+    },
+    {
+      "name": "duplicate",
+      "seconds": 16,
+      "line1": "先讓外送員 #2 接第一張，再讓 #3 接同一張。",
+      "line2": "第二個頁面還留著舊卡片，後端仍要擋住重複接單。"
+    },
+    {
+      "name": "second-accept",
+      "seconds": 17.34,
+      "line1": "外送員 #3 改接第二張。",
+      "line2": "第一張不會被搶走，兩張單會各自對應到接單的人。"
+    },
+    {
+      "name": "own-orders",
+      "seconds": 18.09,
+      "line1": "再開組員做的「我的外送單」，兩邊都查得到各自接的單。",
+      "line2": "不是只有大廳顯示成功；個別訂單頁也有餐點、地址和外送中狀態。"
+    },
+    {
+      "name": "query",
+      "seconds": 18.9,
+      "line1": "從接單頁切過來，重新查後端保存的訂單。",
+      "line2": "接單外送員和兩個頁面相同。這裡用查詢 API 讀取，沒有直接登入資料庫。"
+    },
+    {
+      "name": "abandon",
+      "seconds": 19.67,
+      "line1": "再試一次棄單，確認訂單會回到待接清單。",
+      "line2": "這是原本外送員訂單頁已有的操作。"
+    },
+    {
+      "name": "complete-courier",
+      "seconds": 22.36,
+      "line1": "重新接下第二張，從外送員頁按「完成訂單」。",
+      "line2": "完成後就不再顯示棄單和完成按鈕。"
+    },
+    {
+      "name": "buyer-sync",
+      "seconds": 23.76,
+      "line1": "回買家頁看更新結果，再確認收到第一張的餐點。",
+      "line2": "第二張會顯示已完成；第一張也能由買家確認收餐。"
+    },
+    {
+      "name": "complete-sync",
+      "seconds": 48.5,
+      "line1": "兩個外送員頁也會更新成已完成。",
+      "line2": "從下單、接單到完成，買家和外送員看到的狀態一致。"
+    },
+    {
+      "name": "final-query",
+      "seconds": 49.31,
+      "line1": "最後再查一次，兩張訂單的餐點都已完成。",
+      "line2": "這次只操作專用測試單，原有資料另外比對。"
+    },
+    {
+      "name": "end",
+      "seconds": 49.58
+    }
+  ],
+  "responses": [
+    {
+      "seconds": 4.63,
+      "endpoint": "/api/add_new_order",
+      "status": 201,
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "聯測 t96935f1d 第 1 張，不需出餐"
+          },
+          {
+            "meal_id": 2,
+            "quantity": 2,
+            "note": "聯測 t96935f1d 第 1 張，不需出餐"
+          }
+        ]
+      }
+    },
+    {
+      "seconds": 4.65,
+      "endpoint": "/api/add_new_delivery",
+      "status": 201,
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-25 05:12:40",
+        "pickup_address": "聯測 t96935f1d 第 1 張，不需配送"
+      }
+    },
+    {
+      "seconds": 7.34,
+      "endpoint": "/api/add_new_order",
+      "status": 201,
+      "request": {
+        "buyer_id": 1,
+        "meals": [
+          {
+            "meal_id": 1,
+            "quantity": 1,
+            "note": "聯測 t96935f1d 第 2 張，不需出餐"
+          }
+        ]
+      }
+    },
+    {
+      "seconds": 7.36,
+      "endpoint": "/api/add_new_delivery",
+      "status": 201,
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-25 05:12:42",
+        "pickup_address": "聯測 t96935f1d 第 2 張，不需配送"
+      }
+    },
+    {
+      "seconds": 16.52,
+      "endpoint": "/api/process_order",
+      "status": 200,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-25 05:12:40",
+        "deliverer_id": 2
+      }
+    },
+    {
+      "seconds": 17.05,
+      "endpoint": "/api/process_order",
+      "status": 409,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-25 05:12:40",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "seconds": 17.85,
+      "endpoint": "/api/process_order",
+      "status": 200,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-25 05:12:42",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "seconds": 20.24,
+      "endpoint": "/api/abandon_order",
+      "status": 200,
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-25 05:12:42"
+      }
+    },
+    {
+      "seconds": 21.7,
+      "endpoint": "/api/process_order",
+      "status": 200,
+      "request": {
+        "buyer_id": "1",
+        "timestamp": "2026-11-25 05:12:42",
+        "deliverer_id": 3
+      }
+    },
+    {
+      "seconds": 22.89,
+      "endpoint": "/api/complete_order",
+      "status": 200,
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-25 05:12:42"
+      }
+    },
+    {
+      "seconds": 38.26,
+      "endpoint": "/api/complete_order",
+      "status": 200,
+      "request": {
+        "buyer_id": 1,
+        "timestamp": "2026-11-25 05:12:40"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-25 05:12:40",
+      "order_ids": [
+        1,
+        2
+      ],
+      "response_timestamp": "2026-11-25 05:12:40"
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-25 05:12:42",
+      "order_ids": [
+        3
+      ],
+      "response_timestamp": "2026-11-25 05:12:42"
+    }
+  ],
+  "errors": [],
+  "final": [
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-25 05:12:40",
+      "order_ids": [
+        1,
+        2
+      ],
+      "case": 1,
+      "data": {
+        "meals": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 1,
+              "meal_id": 1,
+              "note": "聯測 t96935f1d 第 1 張，不需出餐",
+              "order_id": 1,
+              "order_state": "completed",
+              "quantity": 1,
+              "timestamp": "2026-11-25 05:12:40"
+            },
+            {
+              "buyer_id": 1,
+              "meal_id": 2,
+              "note": "聯測 t96935f1d 第 1 張，不需出餐",
+              "order_id": 2,
+              "order_state": "completed",
+              "quantity": 2,
+              "timestamp": "2026-11-25 05:12:40"
+            }
+          ]
+        },
+        "delivery": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 1,
+              "deliverer_id": 2,
+              "pickup_address": "聯測 t96935f1d 第 1 張，不需配送",
+              "timestamp": "2026-11-25 05:12:40"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "buyer_id": 1,
+      "timestamp": "2026-11-25 05:12:42",
+      "order_ids": [
+        3
+      ],
+      "case": 2,
+      "data": {
+        "meals": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 1,
+              "meal_id": 1,
+              "note": "聯測 t96935f1d 第 2 張，不需出餐",
+              "order_id": 3,
+              "order_state": "completed",
+              "quantity": 1,
+              "timestamp": "2026-11-25 05:12:42"
+            }
+          ]
+        },
+        "delivery": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 1,
+              "deliverer_id": 3,
+              "pickup_address": "聯測 t96935f1d 第 2 張，不需配送",
+              "timestamp": "2026-11-25 05:12:42"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

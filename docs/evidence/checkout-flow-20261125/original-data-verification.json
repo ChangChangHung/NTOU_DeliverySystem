@@ -1,0 +1,96 @@
+{
+  "checked": "2026-11-25T05:19:01+08:00",
+  "original_data_unchanged": {
+    "users": true,
+    "restaurants": true,
+    "meals": true,
+    "orders": true
+  },
+  "test_accounts": {
+    "buyer": 20,
+    "a": 21,
+    "b": 22
+  },
+  "test_orders": [
+    {
+      "buyer_id": 20,
+      "timestamp": "2026-11-25 05:15:44",
+      "order_ids": [
+        14,
+        15
+      ],
+      "case": 1,
+      "data": {
+        "meals": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 20,
+              "meal_id": 2,
+              "note": "聯測 tb95c92e2 第 1 張，不需出餐",
+              "order_id": 14,
+              "order_state": "completed",
+              "quantity": 1,
+              "timestamp": "2026-11-25 05:15:44"
+            },
+            {
+              "buyer_id": 20,
+              "meal_id": 3,
+              "note": "聯測 tb95c92e2 第 1 張，不需出餐",
+              "order_id": 15,
+              "order_state": "completed",
+              "quantity": 2,
+              "timestamp": "2026-11-25 05:15:44"
+            }
+          ]
+        },
+        "delivery": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 20,
+              "deliverer_id": 21,
+              "pickup_address": "聯測 tb95c92e2 第 1 張，不需配送",
+              "timestamp": "2026-11-25 05:15:44"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "buyer_id": 20,
+      "timestamp": "2026-11-25 05:15:58",
+      "order_ids": [
+        16
+      ],
+      "case": 2,
+      "data": {
+        "meals": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 20,
+              "meal_id": 2,
+              "note": "聯測 tb95c92e2 第 2 張，不需出餐",
+              "order_id": 16,
+              "order_state": "completed",
+              "quantity": 1,
+              "timestamp": "2026-11-25 05:15:58"
+            }
+          ]
+        },
+        "delivery": {
+          "status": 200,
+          "body": [
+            {
+              "buyer_id": 20,
+              "deliverer_id": 22,
+              "pickup_address": "聯測 tb95c92e2 第 2 張，不需配送",
+              "timestamp": "2026-11-25 05:15:58"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
